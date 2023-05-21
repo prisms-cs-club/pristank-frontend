@@ -1,0 +1,24 @@
+[
+    {
+        "type": "MapCrt",
+        "timestamp": 0,
+        "x": 6,
+        "y": 6,
+        "map": [
+            "SldBlk", "SldBlk", "SldBlk", "SldBlk", "SldBlk", "SldBlk",
+            "SldBlk", null,     null,     "BrkBlk", null,     "SldBlk",
+            "SldBlk", null,     "BrkBlk", "BrkBlk", null,     "SldBlk",
+            "SldBlk", null,     "BrkBlk", "BrkBlk", null,     "SldBlk",
+            "SldBlk", null,     "BrkBlk", null,     null,     "SldBlk",
+            "SldBlk", "SldBlk", "SldBlk", "SldBlk", "SldBlk", "SldBlk"
+        ]
+    },
+    {
+        "type": "EleCrt",
+        "timestamp": 1000.0,
+        "uid": 0,
+        "name": "Tk",
+        "x": 1.5,
+        "y": 1.5
+    }
+]
