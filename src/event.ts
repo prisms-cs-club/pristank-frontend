@@ -28,8 +28,9 @@ GameEvent.prototype.valueOf = function() {
  */
 export const GAME_EVENTS: { [key: string]: EventBody } = {
     "MapCrt": (map, param) => {
-        map.width = param.width ?? map.width;
-        map.height = param.height ?? map.height;
+        map.width = param.x ?? map.width;
+        map.height = param.y ?? map.height;
+        map.unitPixel = Math.min(map.app.renderer.width / map.width, map.app.renderer.height / map.height);
         const newMap = param.map;
         let uid = param.uid ?? 0;  // UID of the first non-empty block
         for(let j = 0; j < map.height; j++) {
@@ -50,10 +51,10 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
     "EleUpd": (map, param) => {
         const elem = map.getElement(param.uid);
         if(elem) {
-            elem.x = param["x"] ?? elem.x;
-            elem.y = param["y"] ?? elem.y;
-            elem.rad = param["rad"] ?? elem.rad;
-            elem.hp = param["hp"] ?? elem.hp;
+            elem.x = param.x ?? elem.x;
+            elem.y = param.y ?? elem.y;
+            elem.rad = param.rad ?? elem.rad;
+            elem.hp = param.hp ?? elem.hp;
         }
     }
 };

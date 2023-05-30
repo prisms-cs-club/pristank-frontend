@@ -46,6 +46,7 @@ export class GameElement {
         this.update();
         for(const part of type.parts) {
             const sprite = new PIXI.Sprite(this.gameIn.textures.get(part.img));
+            sprite.anchor.set(0.5);
             sprite.x = this.container.x + this.container.width * part.xOffset;
             sprite.y = this.container.y + this.container.height * part.yOffset;
             this.container.addChild(sprite);

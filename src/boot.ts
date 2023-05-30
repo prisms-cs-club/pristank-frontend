@@ -30,8 +30,7 @@ export async function load(options: LoadOptions) {
                     part.yOffset ??= 0;
                 }
             }
-            // TODO (urgent): empty return value
-            return new Map(Object.entries(data));
+            return new Map(Object.entries(await data));
         }
     }
 

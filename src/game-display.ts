@@ -44,6 +44,13 @@ export class GameDisplay {
             for(const event of options.replay) {
                 this.eventQueue.enqueue(event);
             }
+            this.app.ticker.autoStart = false;
+            let timer = 0;
+            this.app.ticker.add(delta => {
+                this.updateAt(timer);
+                //// this.render();
+                timer += this.app.ticker.elapsedMS;
+            });
         } else {
             // TODO: The game is launched in real time mode
         }
@@ -51,16 +58,7 @@ export class GameDisplay {
 
     start() {
         console.log("game start");
-        if(this.options.replay) {
-            let timer = 0;
-            this.app.ticker.add(delta => {
-                this.updateAt(timer);
-                this.render();
-                timer += delta;
-            });
-        } else {
-            // TODO: real time mode
-        }
+        this.app.ticker.start();
     }
 
     /**
@@ -89,7 +87,7 @@ export class GameDisplay {
      *          mode, this function will return false.
      */
     private updateAt(atTime?: number) {
-        while(!this.eventQueue.isEmpty() && (!atTime || this.eventQueue.front().timestamp <= atTime)) {
+        while(!this.eventQueue.isEmpty() && (atTime == undefined || this.eventQueue.front().timestamp <= atTime)) {
             const event = this.eventQueue.pop();
             try {
                 event.callback(this, event.params);

@@ -8,6 +8,7 @@ export default async function launch(panel) {
     const option = new LoadOptions();
     option.replay = "/demo/replay-demo.json";
     const game = await load(option);
+    panel.innerHTML = "";
     panel.appendChild(game.app.view);
     window.onresize = () => game.windowResize(window.innerWidth, window.innerHeight);
     game.start();
