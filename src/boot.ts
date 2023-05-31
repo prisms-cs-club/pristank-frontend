@@ -28,6 +28,8 @@ export async function load(options: LoadOptions) {
                 for(const part of entry.parts) {
                     part.xOffset ??= 0;
                     part.yOffset ??= 0;
+                    part.width ??= 1;
+                    part.height ??= 1;
                 }
             }
             return new Map(Object.entries(await data));

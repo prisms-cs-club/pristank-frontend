@@ -20,5 +20,11 @@
         "name": "Tk",
         "x": 1.5,
         "y": 1.5
+    },
+    {
+        "type": "EleUpd",
+        "timestamp": 2000.0,
+        "uid": 0,
+        "rad": 1.0
     }
 ]

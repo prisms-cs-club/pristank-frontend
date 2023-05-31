@@ -17,6 +17,8 @@ export type ElementModelPart = {
     img: string;
     xOffset: number;
     yOffset: number;
+    width: number;
+    height: number;
 };
 
 /**
@@ -47,8 +49,10 @@ export class GameElement {
         for(const part of type.parts) {
             const sprite = new PIXI.Sprite(this.gameIn.textures.get(part.img));
             sprite.anchor.set(0.5);
-            sprite.x = this.container.x + this.container.width * part.xOffset;
-            sprite.y = this.container.y + this.container.height * part.yOffset;
+            sprite.x = this.width * this.gameIn.unitPixel * part.xOffset;
+            sprite.y = this.height * this.gameIn.unitPixel * part.yOffset;
+            sprite.width = this.width * this.gameIn.unitPixel * part.width;
+            sprite.height = this.height * this.gameIn.unitPixel * part.height;
             this.container.addChild(sprite);
         }
     }

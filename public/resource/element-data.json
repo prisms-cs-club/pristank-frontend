@@ -22,8 +22,8 @@
     },
     "Tk": {
         "group": "tank",
-        "width": 0.8,
-        "height": 0.8,
+        "width": 0.625,
+        "height": 0.625,
         "hp": 150,
         "parts": [
             {
@@ -31,7 +31,9 @@
             },
             {
                 "img": "tank_gun",
-                "xOffset": 0.4
+                "xOffset": 0.25,
+                "width": 0.75,
+                "height": 0.25
             }
         ]
     },

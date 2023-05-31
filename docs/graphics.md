@@ -15,7 +15,9 @@ In `element-data.json`, in the entry of each element type there is a `part` sect
                 // part 1
                 "img": "<path to the part's image under /resource/texture>",
                 "xOffset": 0.0,
-                "yOffset": 0.0
+                "yOffset": 0.0,
+                "width": 1.0,
+                "height": 1.0
             },
             {
                 // part 2
@@ -26,4 +28,6 @@ In `element-data.json`, in the entry of each element type there is a `part` sect
 }
 ```
 
-Parameter `xOffset` and `yOffset` are optional, with default value 0. The unit of `xOffset` is the width of the element, i.e. `xOffset` of 0.5 means that the horizontal distance between part's center and the bounding box's center is 0.5 times the object's width. Similar relation applies to `yOffset` and element's height.
+Each part's parameter `xOffset` and `yOffset` are optional, with default value 0. `xOffset` is the offset on x direction from the part's center to the element's center divided by element's `width`, i.e. `xOffset` of 0.5 means that the horizontal distance between part's center and the bounding box's center is 0.5 times the element's `width`. Similar relation applies to `yOffset` and element's `height`.
+
+Each part's parameter `width` and `height` are also optional, with default value 1. `width` and `height` are the part's width and height divided by the element's width and height.

@@ -56,5 +56,6 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             elem.rad = param.rad ?? elem.rad;
             elem.hp = param.hp ?? elem.hp;
         }
+        map.render();
     }
 };
