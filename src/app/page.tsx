@@ -7,10 +7,10 @@ import launch from './launch';
 
 export default function Home() {
   useLayoutEffect(() => {
-    launch(document.querySelector('body')!)
+    launch(document.querySelector("main")!, styles["game-canvas"])
   });
   return (
-    <main className={styles.main}>
+    <main className={styles["game-container"]}>
     </main>
   )
 }

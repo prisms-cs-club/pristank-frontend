@@ -68,8 +68,8 @@ export class GameDisplay {
      * @param windowHeight new window height (in number of pixels)
      */
     windowResize(windowWidth: number, windowHeight: number) {
-        this.app.renderer.resize(windowWidth, windowHeight);
-        this.unitPixel = Math.min(this.app.screen.width / this.width, this.app.screen.height / this.height);
+        this.unitPixel = Math.min(windowWidth / this.width, windowHeight / this.height);
+        this.app.renderer.resize(this.width * this.unitPixel, this.height * this.unitPixel);
         this.render();
     }
 
@@ -87,13 +87,13 @@ export class GameDisplay {
      *          mode, this function will return false.
      */
     private updateAt(atTime?: number) {
-        while(!this.eventQueue.isEmpty() && (atTime == undefined || this.eventQueue.front().timestamp <= atTime)) {
+        while(!this.eventQueue.isEmpty() && (atTime == undefined || this.eventQueue.front().t <= atTime)) {
             const event = this.eventQueue.pop();
             try {
                 event.callback(this, event.params);
             } catch(e) {
                 console.error(e);
-                console.error(`Event format damaged at ${event.timestamp}!`);
+                console.error(`Event format damaged at ${event.t}!`);
                 if(this.options.replay) {
                     console.error("Replay aborted.");
                     return false;

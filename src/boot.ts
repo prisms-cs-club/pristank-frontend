@@ -59,7 +59,7 @@ export async function load(options: LoadOptions) {
                 const data = (await fetch(replayFile)).json();
                 const events: GameEvent[] = (await data as EventEntry[]
                 ).map(
-                    entry => new GameEvent(entry.timestamp, GAME_EVENTS[entry.type], entry)
+                    entry => new GameEvent(entry.t, GAME_EVENTS[entry.type], entry)
                 );
                 return events;
             }

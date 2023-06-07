@@ -8,18 +8,18 @@ export type EventBody = (map: GameDisplay, param: EventParams) => void;
  * and the event parameter.
  */
 export class GameEvent {
-    timestamp: number;
+    t: number;           // timestamp of this event (number of miliseconds since the game starts)
     callback: EventBody;
     params: EventParams;
     constructor(timestamp: number, callback: EventBody, params: EventParams) {
-        this.timestamp = timestamp;
+        this.t = timestamp;
         this.callback = callback;
         this.params = params;
     }
 }
 
 GameEvent.prototype.valueOf = function() {
-    return this.timestamp;
+    return this.t;
 }
 
 /**
@@ -31,6 +31,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         map.width = param.x ?? map.width;
         map.height = param.y ?? map.height;
         map.unitPixel = Math.min(map.app.renderer.width / map.width, map.app.renderer.height / map.height);
+        map.windowResize(map.app.renderer.width, map.app.renderer.height);
         const newMap = param.map;
         let uid = param.uid ?? 0;  // UID of the first non-empty block
         for(let j = 0; j < map.height; j++) {
