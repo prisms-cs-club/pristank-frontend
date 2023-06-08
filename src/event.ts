@@ -1,4 +1,5 @@
 import { GameDisplay } from './game-display';
+import { Player, assign_color } from './player';
 
 export type EventParams = { [key: string]: any };
 export type EventBody = (map: GameDisplay, param: EventParams) => void;
@@ -36,15 +37,23 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         let uid = param.uid ?? 0;  // UID of the first non-empty block
         for(let j = 0; j < map.height; j++) {
             for(let i = 0; i < map.width; i++) {
-                if(newMap[j * map.width + i]) {
-                    map.addElement(uid, newMap[j * map.width + i], i + 0.5, j + 0.5, 1, 1);
+                if(newMap[j * map.width + i] && newMap[j * map.width + i] != "") {
+                    map.addElement(uid, newMap[j * map.width + i], i + 0.5, j + 0.5, 0, 1, 1);
                     uid++;
                 }
             }
         }
     },
     "EleCrt": (map, param) => {
-        map.addElement(param.uid, param.name, param.x, param.y, param.width, param.height);
+        // special case of Tank
+        if(param.name == "Tk") {
+            const bgColor = assign_color();
+            const elem = map.addElement(param.uid, param.name, param.x, param.y, param.rad, param.width, param.height, bgColor);
+            // add the corresponding player to the game
+            map.players.push(new Player(elem, param.player!!, 5, bgColor));
+        } else {
+            map.addElement(param.uid, param.name, param.x, param.y, param.width, param.height);
+        }
     },
     "EleRmv": (map, param) => {
         map.removeElement(param.uid);

@@ -19,6 +19,7 @@ export type ElementModelPart = {
     yOffset: number;
     width: number;
     height: number;
+    bgColor: boolean;   // whether this part need a background
 };
 
 /**
@@ -35,7 +36,7 @@ export class GameElement {
     hp?: number;
     container: PIXI.Container;
 
-    constructor(type: ElementData, gameIn: GameDisplay, x: number, y: number, rad?: number, width?: number, height?: number) {
+    constructor(type: ElementData, gameIn: GameDisplay, x: number, y: number, rad?: number, width?: number, height?: number, bgColor?: PIXI.Color) {
         this.type = type;
         this.gameIn = gameIn;
         this.x = x;
@@ -53,6 +54,13 @@ export class GameElement {
             sprite.y = this.height * this.gameIn.unitPixel * part.yOffset;
             sprite.width = this.width * this.gameIn.unitPixel * part.width;
             sprite.height = this.height * this.gameIn.unitPixel * part.height;
+            if(part.bgColor && bgColor) {
+                // add a rectangle filled with the background color
+                const rect = new PIXI.Graphics();
+                rect.beginFill(bgColor);
+                rect.drawRect(sprite.x - sprite.width * 0.5, sprite.y - sprite.height * 0.5, sprite.width, sprite.height);
+                this.container.addChild(rect);
+            }
             this.container.addChild(sprite);
         }
     }
@@ -63,6 +71,7 @@ export class GameElement {
     update() {
         this.container.x = this.x * this.gameIn.unitPixel;
         this.container.y = this.y * this.gameIn.unitPixel;
-        this.container.rotation = this.rad;
+        this.container.rotation = -this.rad;    // Because in PIXI.js, `rotation` is the angle rotating clockwise
+                                                // and we want counterclockwise rotation
     }
 }

@@ -27,7 +27,8 @@
         "hp": 150,
         "parts": [
             {
-                "img": "tank_base"
+                "img": "tank_base",
+                "bgColor": true
             },
             {
                 "img": "tank_gun",

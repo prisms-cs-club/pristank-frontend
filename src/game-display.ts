@@ -3,6 +3,7 @@ import { ElementData, GameElement } from "./element";
 import { GameEvent } from "./event";
 import { MinPriorityQueue, PriorityQueue } from "@datastructures-js/priority-queue";
 import * as PIXI from "pixi.js";
+import { Player } from "./player";
 
 export type GameOptions = {
     replay?: GameEvent[];   // When this flag is set, the game will start in replay mode and load
@@ -20,6 +21,7 @@ export class GameDisplay {
     elemData: Map<string, ElementData>;   // graphics data of each element, including its width, height, hp, etc.
     elemList: Map<UID, GameElement>;      // Mapping from all element's UID to the element object.
     eventQueue: PriorityQueue<GameEvent>; // Event queue. The event with the lowest timestamp will be processed first.
+    players: Player[];
 
     constructor(
         app: PIXI.Application,
@@ -38,6 +40,7 @@ export class GameDisplay {
         this.elemData = elemData;
         this.elemList = new Map();
         this.eventQueue = new MinPriorityQueue();
+        this.players = [];
 
         if(options.replay) {
             // The game is launched in replay mode
@@ -110,14 +113,16 @@ export class GameDisplay {
      * @param x x coordinate of the element.
      * @param y y coordinate of the element.
      */
-    addElement(uid: UID, name: string, x: number, y: number, width?: number, height?: number) {
+    addElement(uid: UID, name: string, x: number, y: number, rad?: number, width?: number, height?: number, bgColor?: PIXI.Color) {
         const data = this.elemData.get(name)!!;
         const element = new GameElement(
-            data, this, x, y, 0,
-            width ?? data.width, height ?? data.height
+            data, this, x, y, rad,
+            width ?? data.width, height ?? data.height,
+            bgColor
         );
         this.elemList.set(uid, element);
         this.app.stage.addChild(element.container);
+        return element;
     }
 
     /**

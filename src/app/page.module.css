@@ -8,3 +8,8 @@
   margin: auto;
   display: block;
 }
+
+.player-panel {
+  text-align: center;
+  display: inline;
+}

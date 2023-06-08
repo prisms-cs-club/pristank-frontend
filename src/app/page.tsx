@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image'
 import styles from './page.module.css'
 import { useLayoutEffect } from 'react'
 import launch from './launch';
