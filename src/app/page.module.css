@@ -12,4 +12,30 @@
 .player-panel {
   text-align: center;
   display: inline;
+  margin: 3px;
+  border-radius: 5px;
+  background-color: rgba(82, 85, 75, 0.4);
+}
+
+.players-panel {
+  display: flex;
+  flex-direction: column;
+  max-width: 30%;
+  left: 0;
+}
+
+.center-screen {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.error-panel {
+  border: 3px solid #d61111;
+  background-color: #e74949;
+  color: white;
+  border-radius: 5px;
+  font-size: 24px;
+  padding: 10px;
 }

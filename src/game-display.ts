@@ -22,14 +22,16 @@ export class GameDisplay {
     elemList: Map<UID, GameElement>;      // Mapping from all element's UID to the element object.
     eventQueue: PriorityQueue<GameEvent>; // Event queue. The event with the lowest timestamp will be processed first.
     players: Player[];
+    errorCallback?: (message: string) => void; // If this function is called, the game will be immediately terminated.
 
     constructor(
         app: PIXI.Application,
         textures: Map<string, PIXI.Texture>,
         elemData: Map<string, ElementData>,
         options: GameOptions,
+        errorCallback: (message: string) => void,
         width?: number,
-        height?: number
+        height?: number,
     ) {
         this.app = app;
         this.textures = textures;
@@ -49,7 +51,7 @@ export class GameDisplay {
             }
             this.app.ticker.autoStart = false;
             let timer = 0;
-            this.app.ticker.add(delta => {
+            this.app.ticker.add(_ => {
                 this.updateAt(timer);
                 //// this.render();
                 timer += this.app.ticker.elapsedMS;
@@ -96,9 +98,11 @@ export class GameDisplay {
                 event.callback(this, event.params);
             } catch(e) {
                 console.error(e);
-                console.error(`Event format damaged at ${event.t}!`);
+                console.error(`Event format damaged at timestamp ${event.t}!`);
                 if(this.options.replay) {
-                    console.error("Replay aborted.");
+                    if(this.errorCallback) {
+                        this.errorCallback("An error occured. Replay Aborted.");
+                    }
                     return false;
                 }
             }

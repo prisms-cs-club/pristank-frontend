@@ -9,12 +9,7 @@ export class LoadOptions {
     TEXTURES_LOCATION: string = "/resource/textures.json";
     width: number = window.innerWidth;    // game display's width (in pixels)
     height: number = window.innerHeight;  // game display's heigth (in pixels)
-    parent: React.Component;              // parent panel of the game
     replay?: string;     // When this flag is set, the game will load the replay file and start in replay mode.
-
-    constructor(parent: React.Component) {
-        this.parent = parent;
-    }
 };
 
 /**

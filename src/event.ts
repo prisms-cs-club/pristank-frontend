@@ -47,6 +47,9 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
     "EleCrt": (map, param) => {
         // special case of Tank
         if(param.name == "Tk") {
+            if(!param.player) {
+                throw new Error("Invalid event parameter: `player` field is undefined in event.");
+            }
             const bgColor = assign_color();
             const elem = map.addElement(param.uid, param.name, param.x, param.y, param.rad, param.width, param.height, bgColor);
             // add the corresponding player to the game
