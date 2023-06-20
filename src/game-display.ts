@@ -22,14 +22,14 @@ export class GameDisplay {
     elemList: Map<UID, GameElement>;      // Mapping from all element's UID to the element object.
     eventQueue: PriorityQueue<GameEvent>; // Event queue. The event with the lowest timestamp will be processed first.
     players: Player[];
-    errorCallback?: (message: string) => void; // If this function is called, the game will be immediately terminated.
+    errorCallback?: (messages: string[]) => void; // If this function is called, the game will be immediately terminated.
 
     constructor(
         app: PIXI.Application,
         textures: Map<string, PIXI.Texture>,
         elemData: Map<string, ElementData>,
         options: GameOptions,
-        errorCallback: (message: string) => void,
+        errorCallback?: (messages: string[]) => void,
         width?: number,
         height?: number,
     ) {
@@ -101,7 +101,7 @@ export class GameDisplay {
                 console.error(`Event format damaged at timestamp ${event.t}!`);
                 if(this.options.replay) {
                     if(this.errorCallback) {
-                        this.errorCallback("An error occured. Replay Aborted.");
+                        this.errorCallback(["An error occured. Replay Aborted.", "Press F12 and check console for more detail."]);
                     }
                     return false;
                 }

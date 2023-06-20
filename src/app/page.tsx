@@ -12,7 +12,7 @@ export default function Home() {
 
     useEffect(() => {
         const options = new LoadOptions();
-        options.replay = "/demo/replay-demo-error.json";
+        options.replay = "/demo/replay-demo.json";
         (async () => {
             setGame(await load(options));
         })();

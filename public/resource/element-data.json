@@ -40,8 +40,8 @@
     },
     "Blt": {
         "group": "bullet",
-        "width": 0.2,
-        "height": 0.2,
+        "width": 0.08,
+        "height": 0.08,
         "parts": [
             {
                 "img": "bullet"

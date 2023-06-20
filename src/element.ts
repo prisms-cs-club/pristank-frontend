@@ -70,7 +70,7 @@ export class GameElement {
      */
     update() {
         this.container.x = this.x * this.gameIn.unitPixel;
-        this.container.y = this.y * this.gameIn.unitPixel;
+        this.container.y = (this.gameIn.height - this.y) * this.gameIn.unitPixel;
         this.container.rotation = -this.rad;    // Because in PIXI.js, `rotation` is the angle rotating clockwise
                                                 // and we want counterclockwise rotation
     }
