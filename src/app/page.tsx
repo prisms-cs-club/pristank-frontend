@@ -12,8 +12,8 @@ export default function Home() {
 
     useEffect(() => {
         const options = new LoadOptions();
-        // options.replay = "/demo/replay-demo.json";
-        options.socketAddr = "ws://localhost:8080";
+        options.replay = "/demo/replay-demo.json";
+        // options.socketAddr = "ws://localhost:8080";
         (async () => {
             setGame(await load(options));
         })();
