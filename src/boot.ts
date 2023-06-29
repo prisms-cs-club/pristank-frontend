@@ -1,26 +1,36 @@
 import { KeyBinding } from "./action";
+import TextBox from "./app/text-box";
 import { ElementData, ElementModelPart } from "./element";
 import { GAME_EVENTS, GameEvent } from "./event";
 import { GameDisplay } from "./game-display";
 import { Task, Tasker } from "./utils/tasker";
 import * as PIXI from "pixi.js";
+import ReactDOM from "react-dom/client";
 
 export class LoadOptions {
     ELEMENT_DATA_LOCATION: string = "/resource/element-data.json";
     TEXTURES_LOCATION: string = "/resource/textures.json";
     KEY_BINDING_LOCATION: string = "/resource/key-binding.json";
-    width: number = window.innerWidth;    // game display's width (in pixels)
-    height: number = window.innerHeight;  // game display's heigth (in pixels)
+    width: number;    // game display's width (in pixels)
+    height: number;   // game display's heigth (in pixels)
     replay?: string;     // When this flag is set, the game will load the replay file and start in replay mode.
     socketAddr?: string; // When this flag is set, the game will open a WebSocket at this URL.
+    constructor(width: number, height: number, replay?: string, socketAddr?: string) {
+        this.width = width;
+        this.height = height;
+        this.replay = replay;
+        this.socketAddr = socketAddr;
+    }
 };
 
 /**
  * Load all resources required to launch the game.
  * @param options Loading options. This includes all adjustable options when loading the game.
- * @returns The loaded game object.
+ * @param taskStart Callback function when a task starts executing.
+ * @param taskComplete Callback function when a task completes executing.
+ * @returns The tasker that yields a GameDisplay object.
  */
-export async function load(options: LoadOptions) {
+export function load(options: LoadOptions) {
     const loadElemData: Task<Map<string, ElementData>> = {
         // load element data from "/resource/element-data.json"
         prerequisite: [],
@@ -55,6 +65,7 @@ export async function load(options: LoadOptions) {
 
     const replayFile = options.replay;
     if(replayFile) {
+        /*** Replay Mode ***/
         type EventEntry = { t: number, [key: string]: any };   // Event in replay file's format
         const loadReplay: Task<GameEvent[]> = {
             // load replay file
@@ -87,7 +98,7 @@ export async function load(options: LoadOptions) {
             }
         }
     
-        return await Tasker<GameDisplay>({
+        return new Tasker({
             "load element data": loadElemData,
             "load textures": loadTextures,
             "load replay file": loadReplay,
@@ -95,6 +106,7 @@ export async function load(options: LoadOptions) {
         }, "initialize game");
 
     } else if(options.socketAddr) {
+        /*** Real-Time Playing Mode ****/
         const loadKeyBinding: Task<KeyBinding> = {
             prerequisite: [],
             callback: async () => {
@@ -103,14 +115,27 @@ export async function load(options: LoadOptions) {
             }
         };
 
+        const requireName: Task<string> = {
+            prerequisite: [],
+            callback: () => {
+                // TODO: Error occured here!!!
+                return new Promise<string>((resolve, reject) => {
+                    ReactDOM.createRoot(document.getElementById("root")!).render(
+                        TextBox({ callback: (name: string) => resolve(name) })
+                    );
+                });
+            }
+        }
+
         const addr = options.socketAddr;
         const initGameDisplay: Task<GameDisplay> = {
             // initialize the game display with the loaded data
-            prerequisite: ["load element data", "load textures", "load key bindings"],
+            prerequisite: ["load element data", "load textures", "load key bindings", "require name"],
             callback: (
                 elemData: Map<string, ElementData>,
                 textures: Map<string, PIXI.Texture>,
-                keyBinding: KeyBinding
+                keyBinding: KeyBinding,
+                name: string
             ) => {
                 const socket = new WebSocket(addr);
                 const app = new PIXI.Application({
@@ -121,6 +146,7 @@ export async function load(options: LoadOptions) {
                 const game = new GameDisplay(app, textures, elemData, { loadedEvents: [], socket, keyBinding });
                 return new Promise((resolve, reject) => {
                     socket.onopen = _ => {
+                        socket.send(name);
                         resolve(game);
                     }
                     setTimeout(() => {
@@ -130,10 +156,11 @@ export async function load(options: LoadOptions) {
             }
         }
     
-        return await Tasker<GameDisplay>({
+        return new Tasker({
             "load element data": loadElemData,
             "load textures": loadTextures,
             "load key bindings": loadKeyBinding,
+            "require name": requireName,
             "initialize game": initGameDisplay
         }, "initialize game");
     }

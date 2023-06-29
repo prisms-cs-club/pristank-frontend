@@ -17,31 +17,50 @@ export type Task<R> = {
  * @param entry The entry task to start with.
  * @returns The result of entry task.
  */
-export function Tasker<T>(tasks: { [key: string]: Task<any> }, entry: string) {
-    const results: { [key: string]: Promise<any>} = {};
-    function task(name: string) {
-        if(tasks[name] == undefined) {
-            // this task's name is not in the task list, thrown an error
-            throw new Error(`Undefined task in tasker: \"${name}\"`);
-        }
-        if(results[name] == undefined) {
-            // this task has not been executed yet
-            results[name] = new Promise((resolve, reject) => {
-                const prereq = tasks[name].prerequisite.map(task);
-                Promise.all(prereq).then((prereqResult) => {
-                    console.log(`Executing task \"${name}\"...`);
-                    try {
-                        resolve(tasks[name].callback(...prereqResult));
-                    } catch(e) {
-                        reject(e);
-                    }
-                }).then(() => {
-                    console.log(`Task \"${name}\" done.`);
-                });
-            });
-        }
-        // this task has been executed, return the result
-        return results[name];
+export class Tasker {
+    tasks: { [key: string]: Task<any> };
+    entry: string;
+    results: { [key: string]: Promise<any>} = {};
+
+    constructor(tasks: { [key: string]: Task<any> }, entry: string) {
+        this.tasks = tasks;
+        this.entry = entry;
     }
-    return task(entry) as Promise<T>;
+
+    /**
+     * Start executing all tasks, starting from task given by `entry`.
+     * @param taskStart Callback function when a task starts executing.
+     * @param taskComplete Callback function when a task completes executing.
+     * @param taskError Callback function when a task throws an error.
+     * @returns The result of `entry` task.
+     */
+    start<T>(taskStart?: (name: string) => void, taskComplete?: (name: string) => void, taskError?: (name: string, error: any) => void) {
+        const tasks = this.tasks;
+        const results = this.results;
+        function task(name: string) {
+            if(tasks[name] == undefined) {
+                // this task's name is not in the task list, thrown an error
+                throw new Error(`Undefined task in tasker: \"${name}\"`);
+            }
+            if(results[name] == undefined) {
+                // this task has not been executed yet
+                results[name] = new Promise((resolve, reject) => {
+                    const prereq = tasks[name].prerequisite.map(task);
+                    Promise.all(prereq).then((prereqResult) => {
+                        taskStart?.(name);                // task starts executing
+                        try {
+                            resolve(
+                                tasks[name].callback(...prereqResult).then(() => taskComplete?.(name), e => taskError?.(name, e))
+                            );
+                        } catch(e) {
+                            reject(e);
+                        }
+                    });
+                });
+            }
+            // this task has been executed, return the result
+            return results[name];
+        }
+        return task(this.entry) as Promise<T>;
+    }
 }

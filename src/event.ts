@@ -55,7 +55,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             // add the corresponding player to the game
             map.players.push(new Player(elem, param.player!!, 5, bgColor));
         } else {
-            map.addElement(param.uid, param.name, param.x, param.y, param.width, param.height);
+            map.addElement(param.uid, param.name, param.x, param.y, param.rad, param.width, param.height);
         }
     },
     "EleRmv": (map, param) => {

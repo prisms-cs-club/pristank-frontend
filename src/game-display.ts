@@ -65,6 +65,16 @@ export class GameDisplay {
                 const event = new GameEvent(data.t, GAME_EVENTS[data.type], data);
                 this.eventQueue.enqueue(event);   // TODO: enqueue or evaluate now?
             };
+            socket.onerror = errEvent => {
+                if(this.errorCallback) {
+                    this.errorCallback(["An error occured with WebSocket.", `Error type: ${errEvent.type}`]);
+                }
+            }
+            socket.onclose = event => {
+                if(this.errorCallback) {
+                    this.errorCallback(["WebSocket was closed before game ends."]);
+                }
+            }
             // add event listeners to keys
             if(options.keyBinding) {
                 const binding = options.keyBinding;
@@ -75,7 +85,7 @@ export class GameDisplay {
                         const action = actions.keyDown[actionStr];
                         if(action) {
                             for(const cmd of action) {
-                                socket.send(timer.toFixed(1) + " " + cmd);
+                                socket.send(Math.floor(timer) + " " + cmd);
                             }
                         }
                     }
@@ -87,7 +97,7 @@ export class GameDisplay {
                         const action = actions.keyUp[actionStr];
                         if(action) {
                             for(const cmd of action) {
-                                socket.send(timer.toFixed(1) + " " + cmd);
+                                socket.send(Math.floor(timer) + " " + cmd);
                             }
                         }
                     }

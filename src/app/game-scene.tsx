@@ -13,7 +13,7 @@ export default function GameScene({ game }: { game: GameDisplay }) {
         game.errorCallback = setError;
         game.start();
     }, [game]);
-    return <div className={styles["game-container"]}>
+    return <div id="root" className={styles["game-container"]}>
         <PlayersPanel players={game.players}></PlayersPanel>
         { error && <ErrorPanel messages={error}></ErrorPanel> }
     </div>
