@@ -4,7 +4,7 @@ export const actions: {
 } = {
     keyDown: {
         "forward": [ "lTrack 1.0", "rTrack 1.0" ],
-        "backward": [ "lTrack 0.0", "rTrack 0.0" ],
+        "backward": [ "lTrack -1.0", "rTrack -1.0" ],
         "left": [ "lTrack -1.0", "rTrack 1.0" ],
         "right": [ "lTrack 1.0", "rTrack -1.0" ],
         "fire": [ "fire" ]
