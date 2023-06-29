@@ -32,9 +32,9 @@
             },
             {
                 "img": "tank_gun",
-                "xOffset": 0.375,
-                "width": 0.75,
-                "height": 0.25
+                "yOffset": -0.375,
+                "width": 0.25,
+                "height": 0.75
             }
         ]
     },
