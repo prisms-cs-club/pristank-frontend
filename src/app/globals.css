@@ -100,3 +100,16 @@ a {
     color-scheme: dark;
   }
 }
+
+input[type='text'] {
+  width: 100%;
+  padding: 2px;
+  outline: none;
+  border: none;
+  border-bottom: 2px solid #909090;
+  background: rgba(0, 0, 0, 0);
+}
+
+input[type='text']:focus {
+  border-bottom: 2px solid #114514;
+}

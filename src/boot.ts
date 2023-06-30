@@ -1,3 +1,4 @@
+import { createElement } from "react";
 import { KeyBinding } from "./action";
 import TextBox from "./app/text-box";
 import { ElementData, ElementModelPart } from "./element";
@@ -118,10 +119,12 @@ export function load(options: LoadOptions) {
         const requireName: Task<string> = {
             prerequisite: [],
             callback: () => {
-                // TODO: Error occured here!!!
                 return new Promise<string>((resolve, reject) => {
-                    ReactDOM.createRoot(document.getElementById("root")!).render(
-                        TextBox({ callback: (name: string) => resolve(name) })
+                    ReactDOM.createRoot(document.getElementById("user-interaction")!).render(
+                        createElement(
+                            TextBox,
+                            { label: "please enter your name: ", placeholder: "press ENTER to continue", onsubmit: (name: string) => resolve(name) }
+                        )
                     );
                 });
             }

@@ -53,8 +53,12 @@ export class GameDisplay {
         this.app.ticker.autoStart = false;
         let timer = 0;
         this.app.ticker.add(_ => {
-            this.updateAt(timer);
-            timer += this.app.ticker.elapsedMS;
+            try {
+                this.updateAt(timer);
+                timer += this.app.ticker.elapsedMS;
+            } catch(e) {
+                errorCallback?.(["An error occured.", "Press F12 and check \"console\" page for more detail."]);
+            }
         });
 
         if(options.socket) {

@@ -44,18 +44,19 @@ export class Tasker {
             }
             if(results[name] == undefined) {
                 // this task has not been executed yet
-                results[name] = new Promise((resolve, reject) => {
-                    const prereq = tasks[name].prerequisite.map(task);
-                    Promise.all(prereq).then((prereqResult) => {
-                        taskStart?.(name);                // task starts executing
-                        try {
-                            resolve(
-                                tasks[name].callback(...prereqResult).then(() => taskComplete?.(name), e => taskError?.(name, e))
-                            );
-                        } catch(e) {
-                            reject(e);
+                const prereq = tasks[name].prerequisite.map(task);
+                results[name] = Promise.all(prereq).then((prereqResult) => {
+                    taskStart?.(name);
+                    return tasks[name].callback(...prereqResult).then(
+                        (value) => {
+                            taskComplete?.(name);
+                            return value;
+                        },
+                        error => {
+                            taskError?.(name, error);
+                            throw error;
                         }
-                    });
+                    );
                 });
             }
             // this task has been executed, return the result

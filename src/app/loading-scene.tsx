@@ -64,6 +64,7 @@ export default function Loading({ tasker, allComplete }: { tasker: Tasker, allCo
                     }
                 })
             }</div>
+            <div id="user-interaction"></div>
         </div>
     )
 }

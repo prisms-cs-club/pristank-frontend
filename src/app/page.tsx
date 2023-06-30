@@ -13,7 +13,7 @@ export default function Home() {
     const [tasker, setTasker] = useState<Tasker>();
     useEffect(() => {
         const options = new LoadOptions(window.innerWidth, window.innerHeight);
-        options.socketAddr = "ws://localhost:8080";
+        options.socketAddr = "ws://localhost:1145";
         // options.replay = "/demo/replay-demo.json";
         setTasker(load(options)!!);
     }, []);

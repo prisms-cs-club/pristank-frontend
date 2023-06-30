@@ -15,8 +15,8 @@ test("tasker without exceptions", async () => {
             return ret1;
         }
     };
-    const loader = Tasker<number[]>({ "task1": task1, "task2": task2 }, "task2");
-    expect(await loader).toStrictEqual([1, 2, 3, 2]);
+    const loader = new Tasker({ "task1": task1, "task2": task2 }, "task2");
+    expect(await loader.start<number[]>()).toStrictEqual([1, 2, 3, 2]);
 });
 
 test("tasker with exceptions", async () => {
@@ -32,9 +32,9 @@ test("tasker with exceptions", async () => {
             throw new Error("task2 failed");
         }
     }
-    const loader = Tasker<number[]>({ "task1": task1, "task2": task2 }, "task2");
+    const loader = new Tasker({ "task1": task1, "task2": task2 }, "task2");
     try {
-        await loader;
+        await loader.start<number[]>();
     } catch(e: any) {
         expect(e.message).toBe("task2 failed");
     }
@@ -65,8 +65,8 @@ test("tasker with multiple requirements", async () => {
             return ret1;
         }
     }
-    const loader = Tasker<number[]>({ "task1": task1, "task2": task2, "task3": task3 }, "task3");
-    expect(await loader).toStrictEqual([1, 2, 3, 1, 2, 3, 2]);
+    const loader = new Tasker({ "task1": task1, "task2": task2, "task3": task3 }, "task3");
+    expect(await loader.start<number[]>()).toStrictEqual([1, 2, 3, 1, 2, 3, 2]);
     expect(task1Counter).toBe(1);
 });
 
@@ -77,9 +77,9 @@ test("tasker with unknown requirement", async () => {
             return [1, 2, 3];
         }
     }
-    const loader = Tasker({ "task1": task1 }, "task1");
+    const loader = new Tasker({ "task1": task1 }, "task1");
     try {
-        await loader;
+        await loader.start();
     } catch(e: any) {
         expect(e.message).toBe("Undefined task in tasker: \"task0\"");
     }
