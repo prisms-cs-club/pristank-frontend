@@ -16,7 +16,7 @@ export default function PlayersPanel(props: { players: Player[] }) {
     const [players, _] = useState(props.players);
     const ret = [];
     for(const player of players) {
-        ret.push(PlayerPanel({ player }));
+        ret.push(<PlayerPanel key={player.name} player={player}></PlayerPanel>);
     }
     return <div className={styles["players-panel"]}>{ret}</div>
 }

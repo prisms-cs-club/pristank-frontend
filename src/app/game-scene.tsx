@@ -1,3 +1,5 @@
+'use client';
+
 import { GameDisplay } from '@/game-display';
 import PlayersPanel from './player';
 import ErrorPanel from './error';

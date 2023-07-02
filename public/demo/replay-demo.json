@@ -52,5 +52,94 @@
         "x": 2.0,
         "y": 1.5,
         "rad": 0.0
+    },
+    {
+        "type": "EleUpd",
+        "t": 5500,
+        "uid": 28,
+        "hp": 140
+    },
+    {
+        "type": "EleUpd",
+        "t": 5600,
+        "uid": 28,
+        "hp": 130
+    },
+    {
+        "type": "EleUpd",
+        "t": 5700,
+        "uid": 28,
+        "hp": 120
+    },
+    {
+        "type": "EleUpd",
+        "t": 5800,
+        "uid": 28,
+        "hp": 110
+    },
+    {
+        "type": "EleUpd",
+        "t": 5900,
+        "uid": 28,
+        "hp": 100
+    },
+    {
+        "type": "EleUpd",
+        "t": 6000,
+        "uid": 28,
+        "hp": 90
+    },
+    {
+        "type": "EleUpd",
+        "t": 6100,
+        "uid": 28,
+        "hp": 80
+    },
+    {
+        "type": "EleUpd",
+        "t": 6200,
+        "uid": 28,
+        "hp": 70
+    },
+    {
+        "type": "EleUpd",
+        "t": 6300,
+        "uid": 28,
+        "hp": 60
+    },
+    {
+        "type": "EleUpd",
+        "t": 6400,
+        "uid": 28,
+        "hp": 50
+    },
+    {
+        "type": "EleUpd",
+        "t": 6500,
+        "uid": 28,
+        "hp": 40
+    },
+    {
+        "type": "EleUpd",
+        "t": 6600,
+        "uid": 28,
+        "hp": 30
+    },
+    {
+        "type": "EleUpd",
+        "t": 6700,
+        "uid": 28,
+        "hp": 20
+    },
+    {
+        "type": "EleUpd",
+        "t": 6800,
+        "uid": 28,
+        "hp": 10
+    },
+    {
+        "type": "EleRmv",
+        "t": 7000,
+        "uid": 28
     }
 ]

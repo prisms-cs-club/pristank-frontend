@@ -16,11 +16,13 @@ export class LoadOptions {
     height: number;   // game display's heigth (in pixels)
     replay?: string;     // When this flag is set, the game will load the replay file and start in replay mode.
     socketAddr?: string; // When this flag is set, the game will open a WebSocket at this URL.
-    constructor(width: number, height: number, replay?: string, socketAddr?: string) {
+    displayHP: boolean;  // Whether to display HP bar
+    constructor(width: number, height: number, replay?: string, socketAddr?: string, displayHP?: boolean) {
         this.width = width;
         this.height = height;
         this.replay = replay;
         this.socketAddr = socketAddr;
+        this.displayHP = displayHP ?? true;
     }
 };
 
@@ -94,7 +96,7 @@ export function load(options: LoadOptions) {
                     height: options.height,
                     backgroundColor: 0x000000
                 });
-                const game = new GameDisplay(app, textures, elemData, { loadedEvents: replay });
+                const game = new GameDisplay(app, textures, elemData, { loadedEvents: replay, displayHP: options.displayHP });
                 return game;
             }
         }
@@ -146,7 +148,7 @@ export function load(options: LoadOptions) {
                     height: options.height,
                     backgroundColor: 0x000000
                 });
-                const game = new GameDisplay(app, textures, elemData, { loadedEvents: [], socket, keyBinding });
+                const game = new GameDisplay(app, textures, elemData, { loadedEvents: [], socket, keyBinding, displayHP: options.displayHP });
                 return new Promise((resolve, reject) => {
                     socket.onopen = _ => {
                         socket.send(name);

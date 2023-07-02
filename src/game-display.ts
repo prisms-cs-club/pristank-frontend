@@ -10,10 +10,12 @@ export type GameOptions = {
     loadedEvents: GameEvent[]; // Events that are loaded before the game starts
     socket?: WebSocket;
     keyBinding?: KeyBinding;
+    displayHP: boolean;
 }
 // TODO: Add launch options (e.g. display all/display visible only, real time/replay, etc.)
 
 export class GameDisplay {
+    options: GameOptions;                  // TODO: a better design
     app: PIXI.Application;
     textures: Map<string, PIXI.Texture>;   // Collection of textures
     width: number;      // width in game unit (number of blocks)
@@ -34,6 +36,7 @@ export class GameDisplay {
         width?: number,
         height?: number,
     ) {
+        this.options = options;
         this.app = app;
         this.textures = textures;
         this.width = width ?? 0;
@@ -70,14 +73,10 @@ export class GameDisplay {
                 this.eventQueue.enqueue(event);   // TODO: enqueue or evaluate now?
             };
             socket.onerror = errEvent => {
-                if(this.errorCallback) {
-                    this.errorCallback(["An error occured with WebSocket.", `Error type: ${errEvent.type}`]);
-                }
+                this.errorCallback?.(["An error occured with WebSocket.", `Error type: ${errEvent.type}`]);
             }
             socket.onclose = event => {
-                if(this.errorCallback) {
-                    this.errorCallback(["WebSocket was closed before game ends."]);
-                }
+                this.errorCallback?.(["WebSocket was closed before game ends."]);
             }
             // add event listeners to keys
             if(options.keyBinding) {
@@ -88,7 +87,7 @@ export class GameDisplay {
                         //// console.log("key down: " + actionStr);
                         const action = actions.keyDown[actionStr];
                         if(action) {
-                            for(const cmd of action) {
+                            for(const cmd of action()) {
                                 socket.send(Math.floor(timer) + " " + cmd);
                             }
                         }
@@ -100,7 +99,7 @@ export class GameDisplay {
                         //// console.log("key up: " + actionStr);
                         const action = actions.keyUp[actionStr];
                         if(action) {
-                            for(const cmd of action) {
+                            for(const cmd of action()) {
                                 socket.send(Math.floor(timer) + " " + cmd);
                             }
                         }
@@ -172,7 +171,7 @@ export class GameDisplay {
             bgColor
         );
         this.elemList.set(uid, element);
-        this.app.stage.addChild(element.container);
+        this.app.stage.addChild(element.outerContainer);
         return element;
     }
 
@@ -183,7 +182,7 @@ export class GameDisplay {
     removeElement(uid: UID) {
         const element = this.elemList.get(uid);
         if(element) {
-            this.app.stage.removeChild(element.container);
+            this.app.stage.removeChild(element.outerContainer);
             this.elemList.delete(uid);
         }
     }

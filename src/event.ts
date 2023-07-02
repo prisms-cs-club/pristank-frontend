@@ -38,7 +38,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         for(let j = 0; j < map.height; j++) {
             for(let i = 0; i < map.width; i++) {
                 if(newMap[j * map.width + i] && newMap[j * map.width + i] != "") {
-                    map.addElement(uid, newMap[j * map.width + i], i + 0.5, j + 0.5, 0, 1, 1);
+                    map.addElement(uid, newMap[j * map.width + i], i + 0.5, map.height - j - 0.5, 0, 1, 1);
                     uid++;
                 }
             }
