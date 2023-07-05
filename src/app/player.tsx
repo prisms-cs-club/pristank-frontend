@@ -7,7 +7,7 @@ import styles from "./page.module.css";
 // TODO: Add `PlayerPanel` each time a new player is created.
 export function PlayerPanel(props: { player: Player }) {
     const [player, setPlayer] = useState(props.player);
-    return <div className={styles["player-panel"]}>
+    return <div className={styles["card"]}>
         <h2 style={{color: player.color.toHex()}}>{player.name}</h2>
     </div>
 }

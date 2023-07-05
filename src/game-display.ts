@@ -1,12 +1,19 @@
 import { UID } from "./utils/type";
 import { ElementData, GameElement } from "./element";
 import { GAME_EVENTS, GameEvent } from "./event";
-import { MinPriorityQueue, PriorityQueue } from "@datastructures-js/priority-queue";
 import * as PIXI from "pixi.js";
 import { Player } from "./player";
 import { KeyBinding, actions } from "./action";
+import { Queue } from "@datastructures-js/queue";
+
+export enum GameMode {
+    REPLAY,
+    REAL_TIME,
+    OBSERVER
+};
 
 export type GameOptions = {
+    mode: GameMode;
     loadedEvents: GameEvent[]; // Events that are loaded before the game starts
     socket?: WebSocket;
     keyBinding?: KeyBinding;
@@ -23,7 +30,7 @@ export class GameDisplay {
     unitPixel: number;  // number of pixels per game unit
     elemData: Map<string, ElementData>;   // graphics data of each element, including its width, height, hp, etc.
     elemList: Map<UID, GameElement>;      // Mapping from all element's UID to the element object.
-    eventQueue: PriorityQueue<GameEvent>; // Event queue. The event with the lowest timestamp will be processed first.
+    eventQueue: Queue<GameEvent>; // Event queue. The event with the lowest timestamp will be processed first.
     players: Player[];
     errorCallback?: (messages: string[]) => void; // If this function is called, the game will terminate immediately.
 
@@ -44,14 +51,10 @@ export class GameDisplay {
         this.unitPixel = Math.min(this.app.renderer.width / this.width, this.app.renderer.height / this.height);
         this.elemData = elemData;
         this.elemList = new Map();
-        this.eventQueue = new MinPriorityQueue();
+        this.eventQueue = new Queue(options.loadedEvents);
         this.players = [];
         this.errorCallback = errorCallback;
-
-        // Push all events into event queue
-        for(const event of options.loadedEvents) {
-            this.eventQueue.enqueue(event);
-        }
+    
         // initialize ticker
         this.app.ticker.autoStart = false;
         let timer = 0;
@@ -64,8 +67,8 @@ export class GameDisplay {
             }
         });
 
-        if(options.socket) {
-            const socket = options.socket;
+        if(options.mode == GameMode.REAL_TIME || options.mode == GameMode.OBSERVER) {
+            const socket = options.socket!!;
             // intiialize socket
             socket.onmessage = msgEvent => {
                 const data = JSON.parse(msgEvent.data) as { [key: string]: any };
@@ -78,9 +81,9 @@ export class GameDisplay {
             socket.onclose = event => {
                 this.errorCallback?.(["WebSocket was closed before game ends."]);
             }
-            // add event listeners to keys
-            if(options.keyBinding) {
-                const binding = options.keyBinding;
+            if(options.mode == GameMode.REAL_TIME) {
+                const binding = options.keyBinding!!;
+                // add event listeners to keys
                 window.addEventListener("keydown", event => {
                     const actionStr = binding.get(event.code);
                     if(actionStr) {
@@ -182,6 +185,7 @@ export class GameDisplay {
     removeElement(uid: UID) {
         const element = this.elemList.get(uid);
         if(element) {
+            console.log(uid);
             this.app.stage.removeChild(element.outerContainer);
             this.elemList.delete(uid);
         }

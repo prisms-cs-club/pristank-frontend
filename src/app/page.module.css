@@ -9,10 +9,11 @@
   display: block;
 }
 
-.player-panel {
+.card {
   text-align: center;
   display: inline;
-  margin: 3px;
+  margin: 5px;
+  padding: 10px;
   border-radius: 5px;
   background-color: rgba(82, 85, 75, 0.4);
 }
