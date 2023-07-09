@@ -32,6 +32,7 @@ export class GameDisplay {
     elemList: Map<UID, GameElement>;      // Mapping from all element's UID to the element object.
     eventQueue: Queue<GameEvent>; // Event queue. The event with the lowest timestamp will be processed first.
     players: Player[];
+    setPlayers?: (players: Player[]) => void;
     errorCallback?: (messages: string[]) => void; // If this function is called, the game will terminate immediately.
 
     constructor(
@@ -185,9 +186,14 @@ export class GameDisplay {
     removeElement(uid: UID) {
         const element = this.elemList.get(uid);
         if(element) {
-            console.log(uid);
             this.app.stage.removeChild(element.outerContainer);
             this.elemList.delete(uid);
+            if(element.type.group == "tank") {
+                this.players = this.players.filter(player => player.element != element);
+                if(this.setPlayers != undefined) {
+                    this.setPlayers(this.players);
+                }
+            }
         }
     }
 

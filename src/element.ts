@@ -82,7 +82,6 @@ export class GameElement {
         this.innerContainer.rotation = -this.rad;    // Because in PIXI.js, `rotation` is the angle rotating clockwise
                                                 // and we want counterclockwise rotation
         if(this.gameIn.options.displayHP && this.hp && this.type.hp && this.hp != this.type.hp) {
-            console.log(this.hp)
             // Add HP bar
             if(!this.hpBar) {
                 this.hpBar = new PIXI.Graphics();

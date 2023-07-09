@@ -1,5 +1,5 @@
 import { GameDisplay } from './game-display';
-import { Player, assign_color } from './player';
+import { Player, assignColor } from './player';
 
 export type EventParams = { [key: string]: any };
 export type EventBody = (map: GameDisplay, param: EventParams) => void;
@@ -50,10 +50,14 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             if(!param.player) {
                 throw new Error("Invalid event parameter: `player` field is undefined in event.");
             }
-            const bgColor = assign_color();
+            const bgColor = assignColor();
             const elem = map.addElement(param.uid, param.name, param.x, param.y, param.rad, param.width, param.height, bgColor);
-            // add the corresponding player to the game
-            map.players.push(new Player(elem, param.player!!, 5, bgColor));
+            // add the player to the game
+            // DON'T replace it with `map.players.push(...)` because `player` array need to be mutated here.
+            map.players = [...map.players, new Player(elem, param.player!!, elem.hp!!, 5, bgColor)];
+            if(map.setPlayers != undefined) {
+                map.setPlayers(map.players);
+            }
         } else {
             map.addElement(param.uid, param.name, param.x, param.y, param.rad, param.width, param.height);
         }

@@ -12,9 +12,9 @@ export default function Home() {
     const [game, setGame] = useState<GameDisplay>();
     const [tasker, setTasker] = useState<Tasker>();
     useEffect(() => {
-        const options = new LoadOptions(window.innerWidth, window.innerHeight, GameMode.REAL_TIME);
-        options.socketAddr = "ws://localhost:1145";
-        // options.replay = "/demo/replay-demo.json";
+        const options = new LoadOptions(window.innerWidth, window.innerHeight, GameMode.REPLAY);
+        // options.socketAddr = "ws://localhost:1145";
+        options.replay = "/demo/replay-demo.json";
         setTasker(load(options)!!);
     }, []);
     return (

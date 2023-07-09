@@ -10,7 +10,7 @@ export const PLAYER_COLOR_LIST = [
 
 var globl_player_color_index = 0;
 
-export function assign_color() {
+export function assignColor() {
     let color: PIXI.Color;
     if(globl_player_color_index < PLAYER_COLOR_LIST.length) {
         color = PLAYER_COLOR_LIST[globl_player_color_index];
@@ -25,18 +25,27 @@ export function assign_color() {
     return color;
 }
 
+export type PlayerState = {
+    money: number;        // Amount of money the player currently owns.
+    hp: number;
+    visionRadius: number; // Vision radius
+};
+
 export class Player {
     element: GameElement;     // The element which player is controlling.
     name: string;             // Name of the player.
     color: PIXI.Color;             // Theme color (tank color and text color) of the player.
-    visionRadius: number;     // Radius of vision of the player.
-    money: number;            // Amount of money the player currently owns.
+    state: PlayerState;
+    setState?: (state: PlayerState) => void;
 
-    constructor(element: GameElement, name: string, visionRange: number, color?: PIXI.Color, money?: number) {
+    constructor(element: GameElement, name: string, hp: number, visionRange: number, color?: PIXI.Color, money?: number) {
         this.element = element;
         this.name = name;
-        this.visionRadius = visionRange;
-        this.money = money ?? 0;
-        this.color = color ?? assign_color();
+        this.state = {
+            hp,
+            visionRadius: visionRange,
+            money: money ?? 0,
+        }
+        this.color = color ?? assignColor();
     }
 }

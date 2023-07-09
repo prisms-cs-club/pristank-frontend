@@ -19,10 +19,17 @@
 }
 
 .players-panel {
+  position: absolute;
+  left: 0;
+  top: 0;
   display: flex;
   flex-direction: column;
   max-width: 30%;
   left: 0;
+}
+
+.players-panel ul {
+  list-style-type: none;
 }
 
 .center-screen {
