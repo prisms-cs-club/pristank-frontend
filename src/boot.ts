@@ -1,29 +1,38 @@
 import { createElement } from "react";
 import { KeyBinding } from "./action";
-import TextBox from "./app/text-box";
+import TextBox from "@/components/text-box";
 import { ElementData, ElementModelPart } from "./element";
 import { GAME_EVENTS, GameEvent } from "./event";
-import { GameDisplay, GameMode } from "./game-display";
+import { GameDisplay, GameMode, Observer, RealTime, Replay } from "./game-display";
 import { Task, Tasker } from "./utils/tasker";
 import * as PIXI from "pixi.js";
 import ReactDOM from "react-dom/client";
+
+export interface LoadReplay {
+    readonly kind: "Replay";
+    file: string;
+};
+
+export interface LoadRealTime {
+    readonly kind: "RealTime";
+    addr: string;
+};
+
+export interface LoadObserver {
+    readonly kind: "Observer";
+    socketAddr: string;
+};
+
+export type LoaderMode = LoadReplay | LoadRealTime | LoadObserver;
 
 export class LoadOptions {
     ELEMENT_DATA_LOCATION: string = "/resource/element-data.json";
     TEXTURES_LOCATION: string = "/resource/textures.json";
     KEY_BINDING_LOCATION: string = "/resource/key-binding.json";
-    width: number;    // game display's width (in pixels)
-    height: number;   // game display's heigth (in pixels)
-    mode: GameMode;   // game mode
-    replay?: string;     // When this flag is set, the game will load the replay file and start in replay mode.
-    socketAddr?: string; // When this flag is set, the game will open a WebSocket at this URL.
+    mode: LoaderMode; // game mode
     displayHP: boolean;  // Whether to display HP bar
-    constructor(width: number, height: number, mode: GameMode, replay?: string, socketAddr?: string, displayHP?: boolean) {
-        this.width = width;
-        this.height = height;
+    constructor(mode: LoaderMode, displayHP?: boolean) {
         this.mode = mode;
-        this.replay = replay;
-        this.socketAddr = socketAddr;
         this.displayHP = displayHP ?? true;
     }
 };
@@ -68,18 +77,18 @@ export function load(options: LoadOptions) {
         }
     }
 
-    switch(options.mode) {
-        case GameMode.REPLAY: {
+    switch(options.mode.kind) {
+        case "Replay": {
+            const replayMode = options.mode;
             /*** Replay Mode ***/
-            const replayFile = options.replay!!;
+            const replayFile = replayMode.file;
             type EventEntry = { t: number, [key: string]: any };   // Event in replay file's format
             const loadReplay: Task<GameEvent[]> = {
                 // load replay file
                 prerequisite: [],
                 callback: async () => {
-                    const data = (await fetch(replayFile)).json();
-                    const events: GameEvent[] = (await data as EventEntry[]
-                    ).map(
+                    const data = (await fetch(replayMode.file)).json();
+                    const events: GameEvent[] = (await data as EventEntry[]).map(
                         entry => new GameEvent(entry.t, GAME_EVENTS[entry.type], entry)
                     );
                     return events;
@@ -95,11 +104,12 @@ export function load(options: LoadOptions) {
                     replay: GameEvent[]
                 ) => {
                     const app = new PIXI.Application({
-                        width: options.width,
-                        height: options.height,
+                        width: window.innerWidth,
+                        height: window.innerHeight,
                         backgroundColor: 0x000000
                     });
-                    const game = new GameDisplay(app, textures, elemData, { mode: options.mode, loadedEvents: replay, displayHP: options.displayHP });
+                    const mode: Replay = { kind: "Replay", events: replay };
+                    const game = new GameDisplay(app, textures, elemData, { mode, displayHP: options.displayHP });
                     return game;
                 }
             }
@@ -112,8 +122,9 @@ export function load(options: LoadOptions) {
             }, "initialize game");
         }
     
-        case GameMode.REAL_TIME: {
+        case "RealTime": {
             /*** Real-Time Playing Mode ****/
+            const realTimeMode = options.mode;
             const loadKeyBinding: Task<KeyBinding> = {
                 prerequisite: [],
                 callback: async () => {
@@ -138,7 +149,6 @@ export function load(options: LoadOptions) {
                     });
                 }
             }
-            const addr = options.socketAddr!!;
             const initGameDisplay: Task<GameDisplay> = {
                 // initialize the game display with the loaded data
                 prerequisite: ["load element data", "load textures", "load key bindings", "require name"],
@@ -149,22 +159,23 @@ export function load(options: LoadOptions) {
                     name: string
                 ) => {
                     return new Promise((resolve, reject) => {
-                        const socket = new WebSocket(addr);
+                        const socket = new WebSocket(realTimeMode.addr);
                         const app = new PIXI.Application({
-                            width: options.width,
-                            height: options.height,
+                            width: window.innerWidth,
+                            height: window.innerHeight,
                             backgroundColor: 0x000000
                         });
-                        const game = new GameDisplay(app, textures, elemData, { mode: options.mode, loadedEvents: [], socket, keyBinding, displayHP: options.displayHP });
+                        const mode: RealTime = { kind: "RealTime", socket, keyBinding, name };
+                        const game = new GameDisplay(app, textures, elemData, { mode, displayHP: options.displayHP });
                         socket.onopen = _ => {
                             socket.send(name);
                             resolve(game);
                         }
                         socket.onclose = _ => {
-                            reject(`Cannot establish connection to ${addr}`);
+                            reject(`Cannot establish connection to ${realTimeMode.addr}`);
                         }
                         setTimeout(() => {
-                            reject(`Connection to ${addr} timed out.`);
+                            reject(`Connection to ${realTimeMode.addr} timed out.`);
                         }, 10000);
                     });
                 }
@@ -178,8 +189,8 @@ export function load(options: LoadOptions) {
             }, "initialize game");
         }
 
-        case GameMode.OBSERVER: {
-            const addr = options.socketAddr!!;
+        case "Observer": {
+            const addr = options.mode.socketAddr;
             const initGameDisplay: Task<GameDisplay> = {
                 // initialize the game display with the loaded data
                 prerequisite: ["load element data", "load textures"],
@@ -190,11 +201,12 @@ export function load(options: LoadOptions) {
                     return new Promise((resolve, reject) => {
                         const socket = new WebSocket(addr);
                         const app = new PIXI.Application({
-                            width: options.width,
-                            height: options.height,
+                            width: window.innerWidth,
+                            height: window.innerHeight,
                             backgroundColor: 0x000000
                         });
-                        const game = new GameDisplay(app, textures, elemData, { mode: options.mode, loadedEvents: [], socket, displayHP: options.displayHP });
+                        const mode: Observer = { kind: "Observer", socket };
+                        const game = new GameDisplay(app, textures, elemData, { mode, displayHP: options.displayHP });
                         socket.onopen = _ => {
                             socket.send("OBSERVER");
                             resolve(game);

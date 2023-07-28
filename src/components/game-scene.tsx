@@ -4,7 +4,7 @@ import { GameDisplay } from '@/game-display';
 import { PlayersPanel } from './players';
 import ErrorPanel from './error';
 import { useEffect, createContext, useState } from 'react';
-import styles from './page.module.css';
+import styles from '@/app/page.module.css';
 
 export const GameContext = createContext<GameDisplay | undefined>(undefined);
 export const ErrorContext = createContext<string[] | undefined>(undefined);
@@ -19,7 +19,9 @@ export default function GameScene({ game }: { game: GameDisplay }) {
     }, [game]);
     return <div id="root" className={styles["game-container"]}>
         <GameContext.Provider value={game}>
-            <PlayersPanel></PlayersPanel>
+            <div className={styles["left-panel"]}>
+                <PlayersPanel></PlayersPanel>
+            </div>
             <ErrorContext.Provider value={error}> 
                 { error && <ErrorPanel></ErrorPanel> }
             </ErrorContext.Provider>

@@ -34,18 +34,26 @@ export type PlayerState = {
 export class Player {
     element: GameElement;     // The element which player is controlling.
     name: string;             // Name of the player.
-    color: PIXI.Color;             // Theme color (tank color and text color) of the player.
-    state: PlayerState;
+    color: PIXI.Color;        // Theme color (tank color and text color) of the player.
+    state: PlayerState;       // State of the player.
     setState?: (state: PlayerState) => void;
 
-    constructor(element: GameElement, name: string, hp: number, visionRange: number, color?: PIXI.Color, money?: number) {
+    constructor(element: GameElement, name: string, visionRange: number, money?: number, color?: PIXI.Color) {
         this.element = element;
         this.name = name;
         this.state = {
-            hp,
-            visionRadius: visionRange,
             money: money ?? 0,
+            hp: element.hp!!,
+            visionRadius: visionRange
         }
         this.color = color ?? assignColor();
+    }
+
+    get hp() {
+        return this.element.hp!!;
+    }
+
+    set hp(value: number) {
+        this.setState?.({ ...this.state!!, hp: value });
     }
 }

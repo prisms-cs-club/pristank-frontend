@@ -1,5 +1,5 @@
 import { useState } from "react";
-import styles from "./page.module.css";
+import styles from "@/app/page.module.css";
 
 export default function TextBox({ label, placeholder, onsubmit }: { label: string, placeholder: string, onsubmit: (text: string) => void }) {
     const [text, setText] = useState<string>("");

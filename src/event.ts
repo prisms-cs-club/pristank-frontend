@@ -54,7 +54,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             const elem = map.addElement(param.uid, param.name, param.x, param.y, param.rad, param.width, param.height, bgColor);
             // add the player to the game
             // DON'T replace it with `map.players.push(...)` because `player` array need to be mutated here.
-            map.players = [...map.players, new Player(elem, param.player!!, elem.hp!!, 5, bgColor)];
+            map.players = [...map.players, new Player(elem, param.player!!, 5, 150, bgColor)];
             if(map.setPlayers != undefined) {
                 map.setPlayers(map.players);
             }

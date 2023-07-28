@@ -3,7 +3,7 @@ import { Tasker } from '@/utils/tasker';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { CompletedTask, ErrorTask, ExecutingTask } from './tasks';
 
-export default function Loading({ tasker, allComplete }: { tasker: Tasker, allComplete: (value: GameDisplay) => void }) {
+export default function LoadingScene<T>({ tasker, allComplete }: { tasker: Tasker, allComplete: (value: T) => void }) {
     const [tasks, setTasks] = useState<{ [name: string]: number }>({});  // completion states of all tasks
                                                                          // 0 for executing, 1 for completed, 2 for error
     function taskStart(name: string) {
@@ -46,7 +46,7 @@ export default function Loading({ tasker, allComplete }: { tasker: Tasker, allCo
 
     useEffect(() => {
         (async () => {
-            await tasker.start<GameDisplay>(taskStart, taskComplete, taskError).then(allComplete);
+            await tasker.start<T>(taskStart, taskComplete, taskError).then(allComplete);
         })();
     });
     return (

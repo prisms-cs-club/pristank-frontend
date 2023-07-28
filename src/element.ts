@@ -1,10 +1,32 @@
 import { threadId } from "worker_threads";
 import { GameDisplay } from "./game-display";
 import * as PIXI from "pixi.js";
+import { MapEditor } from "./map-editor";
 
 const HP_BAR_VERTICAL_BIAS = 5; // The vertical distance between the top of element and the bottom of HP bar in pixels
 const HP_BAR_WIDTH = 50;        // The width of HP bar in pixels
 const HP_BAR_HEIGHT = 5;        // The height of HP bar in pixels
+
+export function constructInnerContainer(type: ElementData, width: number, height: number, parent: MapEditor | GameDisplay, bgColor?: PIXI.Color) {
+    const container = new PIXI.Container();
+    for(const part of type.parts) {
+        const sprite = new PIXI.Sprite(parent.textures.get(part.img));
+        sprite.anchor.set(0.5);
+        sprite.x = width * parent.unitPixel * part.xOffset;
+        sprite.y = height * parent.unitPixel * part.yOffset;
+        sprite.width = width * parent.unitPixel * part.width;
+        sprite.height = height * parent.unitPixel * part.height;
+        if(part.bgColor && bgColor) {
+            // add a rectangle filled with the background color
+            const rect = new PIXI.Graphics();
+            rect.beginFill(bgColor);
+            rect.drawRect(sprite.x - sprite.width * 0.5, sprite.y - sprite.height * 0.5, sprite.width, sprite.height);
+            container.addChild(rect);
+        }
+        container.addChild(sprite);
+    }
+    return container;
+}
 
 /**
  * `ElementData` gives the default data for a specific type of element, such as tank, bullet, etc.
@@ -52,25 +74,9 @@ export class GameElement {
         this.height = height ?? type.height;
         this.hp = type.hp;
         this.outerContainer = new PIXI.Container();
-        this.innerContainer = new PIXI.Container();
+        this.innerContainer = constructInnerContainer(type, this.width, this.height, this.gameIn, bgColor);
         this.outerContainer.addChild(this.innerContainer);
         this.update();
-        for(const part of type.parts) {
-            const sprite = new PIXI.Sprite(this.gameIn.textures.get(part.img));
-            sprite.anchor.set(0.5);
-            sprite.x = this.width * this.gameIn.unitPixel * part.xOffset;
-            sprite.y = this.height * this.gameIn.unitPixel * part.yOffset;
-            sprite.width = this.width * this.gameIn.unitPixel * part.width;
-            sprite.height = this.height * this.gameIn.unitPixel * part.height;
-            if(part.bgColor && bgColor) {
-                // add a rectangle filled with the background color
-                const rect = new PIXI.Graphics();
-                rect.beginFill(bgColor);
-                rect.drawRect(sprite.x - sprite.width * 0.5, sprite.y - sprite.height * 0.5, sprite.width, sprite.height);
-                this.innerContainer.addChild(rect);
-            }
-            this.innerContainer.addChild(sprite);
-        }
     }
 
     /**

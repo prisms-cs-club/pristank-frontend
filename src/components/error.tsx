@@ -1,7 +1,7 @@
 'use client';
 
 import { useContext } from 'react';
-import styles from './page.module.css';
+import styles from '@/app/page.module.css';
 import { ErrorContext } from './game-scene';
 
 export default function ErrorPanel() {

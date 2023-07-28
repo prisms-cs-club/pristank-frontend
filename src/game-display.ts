@@ -6,17 +6,27 @@ import { Player } from "./player";
 import { KeyBinding, actions } from "./action";
 import { Queue } from "@datastructures-js/queue";
 
-export enum GameMode {
-    REPLAY,
-    REAL_TIME,
-    OBSERVER
-};
+export interface Replay {
+    readonly kind: "Replay";
+    events: GameEvent[];
+}
+
+export interface RealTime {
+    readonly kind: "RealTime";
+    socket: WebSocket;
+    keyBinding: KeyBinding;
+    name: string;
+}
+
+export interface Observer {
+    readonly kind: "Observer";
+    socket: WebSocket;
+}
+
+export type GameMode = Replay | RealTime | Observer;
 
 export type GameOptions = {
     mode: GameMode;
-    loadedEvents: GameEvent[]; // Events that are loaded before the game starts
-    socket?: WebSocket;
-    keyBinding?: KeyBinding;
     displayHP: boolean;
 }
 // TODO: Add launch options (e.g. display all/display visible only, real time/replay, etc.)
@@ -52,7 +62,7 @@ export class GameDisplay {
         this.unitPixel = Math.min(this.app.renderer.width / this.width, this.app.renderer.height / this.height);
         this.elemData = elemData;
         this.elemList = new Map();
-        this.eventQueue = new Queue(options.loadedEvents);
+        this.eventQueue = (options.mode.kind == "Replay") ? new Queue(options.mode.events) : new Queue();
         this.players = [];
         this.errorCallback = errorCallback;
     
@@ -68,8 +78,8 @@ export class GameDisplay {
             }
         });
 
-        if(options.mode == GameMode.REAL_TIME || options.mode == GameMode.OBSERVER) {
-            const socket = options.socket!!;
+        if(options.mode.kind == "RealTime" || options.mode.kind == "Observer") {
+            const socket = options.mode.socket!!;
             // intiialize socket
             socket.onmessage = msgEvent => {
                 const data = JSON.parse(msgEvent.data) as { [key: string]: any };
@@ -82,8 +92,8 @@ export class GameDisplay {
             socket.onclose = event => {
                 this.errorCallback?.(["WebSocket was closed before game ends."]);
             }
-            if(options.mode == GameMode.REAL_TIME) {
-                const binding = options.keyBinding!!;
+            if(options.mode.kind == "RealTime") {
+                const binding = options.mode.keyBinding!!;
                 // add event listeners to keys
                 window.addEventListener("keydown", event => {
                     const actionStr = binding.get(event.code);
@@ -189,9 +199,16 @@ export class GameDisplay {
             this.app.stage.removeChild(element.outerContainer);
             this.elemList.delete(uid);
             if(element.type.group == "tank") {
-                this.players = this.players.filter(player => player.element != element);
+                this.players = this.players.filter(player => { // filter out the dead player
+                    const condition = player.element != element;
+                    if(!condition && this.options.mode.kind == "RealTime" && player.name == this.options.mode.name) {
+                        // In real-time mode, if the player you are controlling is dead, pop up the error panel.
+                        this.errorCallback?.(["You are dead!"]);
+                    }
+                    return condition;
+                });
                 if(this.setPlayers != undefined) {
-                    this.setPlayers(this.players);
+                    this.setPlayers(this.players);  // call the `setPlayers` function to update the left panel
                 }
             }
         }
