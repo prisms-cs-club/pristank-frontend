@@ -10,14 +10,14 @@ import { Tasker } from '@/utils/tasker';
 import { Metadata } from 'next';
 
 const mode
-    : LoadReplay = {
-    kind: "Replay",
-    file: "/demo/replay-demo.json",
-};
-//     : LoadRealTime = {
-//     kind: "RealTime",
-//     addr: "ws://localhost:1145",
-// }
+//     : LoadReplay = {
+//     kind: "Replay",
+//     file: "/demo/replay-demo.json",
+// };
+    : LoadRealTime = {
+    kind: "RealTime",
+    addr: "ws://localhost:1145",
+}
 
 export default function Home() {
     const options = new LoadOptions(mode);

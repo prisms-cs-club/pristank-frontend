@@ -24,22 +24,22 @@ const loadBlockData: Task<Map<string, ElementData>> = {
     }
 }
 
-const loadTextures: Task<Map<string, PIXI.Texture>> = {
+const loadTextures: Task<[Map<string, string>, Map<string, PIXI.Texture>]> = {
     prerequisite: [],
     callback: async () => {
         const textures = new Map<string, PIXI.Texture>();
-        const textureNames = (await fetch(TEXTURES_LOCATION)).json();
-        for(const [name, file] of Object.entries(await textureNames)) {
+        const textureNames = Object.entries(await (await fetch(TEXTURES_LOCATION)).json() as { [key: string]: string });
+        for(const [name, file] of textureNames) {
             textures.set(name, PIXI.Texture.from(`/resource/texture/${file}`));
         }
-        return textures;
+        return [new Map(textureNames), textures];
     }
 }
 
 const init: Task<MapEditor> = {
     prerequisite: ["load block data", "load textures"],
-    callback: async (blockData: Map<string, ElementData>, textures: Map<string, PIXI.Texture>) => {
-        return new MapEditor(blockData, textures);
+    callback: async (blockData: Map<string, ElementData>, [imagePath, textures]: [Map<string, string>, Map<string, PIXI.Texture>]) => {
+        return new MapEditor(blockData, imagePath, textures);
     }
 };
 
@@ -49,19 +49,25 @@ export const loadMapEditor = new Tasker({
     "initialize": init,
 }, "initialize");
 
+export const MAP_EDITOR_DEFAULT_WIDTH: number = 10;
+export const MAP_EDITOR_DEFAULT_HEIGHT: number = 10;
+
 export class MapEditor {
     // TODO: not completed
     elements: Map<string, ElementData>;
+    imagePath: Map<string, string>;       // path of each part of the element
     textures: Map<string, PIXI.Texture>;
     app: PIXI.Application;
-    width: number = 10;
-    height: number = 10;
+    width: number = MAP_EDITOR_DEFAULT_WIDTH;
+    height: number = MAP_EDITOR_DEFAULT_HEIGHT;
     unitPixel: number = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
-    blocks!: string[][];
-    blockImgs!: (PIXI.Container | undefined)[][];
+    blocks!: string[][];                           // Serial names of each block. `blocks[j][i]` is the block on jth row and ith colume.
+    blockImgs!: (PIXI.Container | undefined)[][];  // Images of each block on the canvas.
+    activateBlock: string = "";
     
-    constructor(elements: Map<string, ElementData>, textures: Map<string, PIXI.Texture>) {
+    constructor(elements: Map<string, ElementData>, imagePath: Map<string, string>, textures: Map<string, PIXI.Texture>) {
         this.elements = elements;
+        this.imagePath = imagePath;
         this.textures = textures;
         this.app = new PIXI.Application({
             width: this.unitPixel * this.width, height: this.unitPixel * this.height
@@ -82,6 +88,7 @@ export class MapEditor {
                 }
             }
         }
+        // add solid blocks on the boundary of map
         this.blockImgs = Array(this.height).fill(null).map((i, _) => Array(this.width).fill(undefined));
         for(let i = 0; i < this.height; i++) {
             this.replaceTile(i, 0, "SldBlk");
@@ -108,9 +115,42 @@ export class MapEditor {
         if(this.blockImgs[i][j]) {
             this.app.stage.removeChild(this.blockImgs[i][j]!!);
         }
-        this.blockImgs[i][j] = constructInnerContainer(this.elements.get(newName)!!, 1.0, 1.0, this);
-        this.blockImgs[i][j]!!.x = (j + 0.5) * this.unitPixel;
-        this.blockImgs[i][j]!!.y = (i + 0.5) * this.unitPixel;
-        this.app.stage.addChild(this.blockImgs[i][j]!!);
+        if(newName == "") {
+            this.blockImgs[i][j] = undefined;
+        } else {
+            this.blockImgs[i][j] = constructInnerContainer(this.elements.get(newName)!!, 1.0, 1.0, this);
+            this.blockImgs[i][j]!!.x = (j + 0.5) * this.unitPixel;
+            this.blockImgs[i][j]!!.y = (i + 0.5) * this.unitPixel;
+            this.app.stage.addChild(this.blockImgs[i][j]!!);
+        }
+    }
+
+    canvasOnClick(canvas: HTMLCanvasElement, e: MouseEvent) {
+        if(this.activateBlock != "") {
+            const rect = canvas.getBoundingClientRect();
+            const i = Math.floor((e.clientY - rect.top) / this.unitPixel);
+            const j = Math.floor((e.clientX - rect.left) / this.unitPixel);
+            if(e.ctrlKey || e.shiftKey) {
+                this.replaceTile(i, j, "");
+            } else {
+                this.replaceTile(i, j, this.activateBlock);
+            }
+        }
+    }
+
+    getMapCrtEvent(): { [key: string]: any } {
+        const mapFlatten: string[] = [];
+        for(const row of this.blocks) {
+            for(const name of row) {
+                mapFlatten.push(name);
+            }
+        }
+        return {
+            "type": "MapCrt",
+            "x": this.width,
+            "y": this.height,
+            "initUid": 0,
+            "map": mapFlatten,
+        }
     }
 }

@@ -2,7 +2,7 @@ import { GameDisplay } from './game-display';
 import { Player, assignColor } from './player';
 
 export type EventParams = { [key: string]: any };
-export type EventBody = (map: GameDisplay, param: EventParams) => void;
+export type EventBody = (game: GameDisplay, param: EventParams) => void;
 
 /**
  * Game event class. Each event is defined with its event type, timestamp when the event occurs,
@@ -28,51 +28,51 @@ GameEvent.prototype.valueOf = function() {
  * If an event is not in the list below (such as HP update event), it will be ignored.
  */
 export const GAME_EVENTS: { [key: string]: EventBody } = {
-    "MapCrt": (map, param) => {
-        map.width = param.x ?? map.width;
-        map.height = param.y ?? map.height;
-        map.unitPixel = Math.min(map.app.renderer.width / map.width, map.app.renderer.height / map.height);
-        map.windowResize(map.app.renderer.width, map.app.renderer.height);
+    "MapCrt": (game, param) => {
+        game.width = param.x ?? game.width;
+        game.height = param.y ?? game.height;
+        game.unitPixel = Math.min(game.app.renderer.width / game.width, game.app.renderer.height / game.height);
+        game.windowResize(game.app.renderer.width, game.app.renderer.height);
         const newMap = param.map;
         let uid = param.uid ?? 0;  // UID of the first non-empty block
-        for(let j = 0; j < map.height; j++) {
-            for(let i = 0; i < map.width; i++) {
-                if(newMap[j * map.width + i] && newMap[j * map.width + i] != "") {
-                    map.addElement(uid, newMap[j * map.width + i], i + 0.5, map.height - j - 0.5, 0, 1, 1);
+        for(let j = 0; j < game.height; j++) {
+            for(let i = 0; i < game.width; i++) {
+                if(newMap[j * game.width + i] && newMap[j * game.width + i] != "") {
+                    game.addElement(uid, newMap[j * game.width + i], i + 0.5, game.height - j - 0.5, 0, 1, 1);
                     uid++;
                 }
             }
         }
     },
-    "EleCrt": (map, param) => {
+    "EleCrt": (game, param) => {
         // special case of Tank
         if(param.name == "Tk") {
             if(!param.player) {
                 throw new Error("Invalid event parameter: `player` field is undefined in event.");
             }
             const bgColor = assignColor();
-            const elem = map.addElement(param.uid, param.name, param.x, param.y, param.rad, param.width, param.height, bgColor);
+            const elem = game.addElement(param.uid, param.name, param.x, param.y, param.rad, param.width, param.height, bgColor);
             // add the player to the game
             // DON'T replace it with `map.players.push(...)` because `player` array need to be mutated here.
-            map.players = [...map.players, new Player(elem, param.player!!, 5, 150, bgColor)];
-            if(map.setPlayers != undefined) {
-                map.setPlayers(map.players);
+            game.players = [...game.players, new Player(elem, param.player!!, 5, 150, bgColor)];
+            if(game.setPlayers != undefined) {
+                game.setPlayers(game.players);
             }
         } else {
-            map.addElement(param.uid, param.name, param.x, param.y, param.rad, param.width, param.height);
+            game.addElement(param.uid, param.name, param.x, param.y, param.rad, param.width, param.height);
         }
     },
-    "EleRmv": (map, param) => {
-        map.removeElement(param.uid);
+    "EleRmv": (game, param) => {
+        game.removeElement(param.uid);
     },
-    "EleUpd": (map, param) => {
-        const elem = map.getElement(param.uid);
+    "EleUpd": (game, param) => {
+        const elem = game.getElement(param.uid);
         if(elem) {
             elem.x = param.x ?? elem.x;
             elem.y = param.y ?? elem.y;
             elem.rad = param.rad ?? elem.rad;
             elem.hp = param.hp ?? elem.hp;
         }
-        map.render();
+        game.render();
     }
 };
