@@ -1,5 +1,4 @@
 import { ElementData, constructInnerContainer } from "./element";
-import { GameDisplay } from "./game-display";
 import { Task, Tasker } from "./utils/tasker";
 import * as PIXI from "pixi.js";
 
@@ -43,6 +42,7 @@ const init: Task<MapEditor> = {
     }
 };
 
+// the tasker for loading the map editor
 export const loadMapEditor = new Tasker({
     "load block data": loadBlockData,
     "load textures": loadTextures,
@@ -51,6 +51,10 @@ export const loadMapEditor = new Tasker({
 
 export const MAP_EDITOR_DEFAULT_WIDTH: number = 10;
 export const MAP_EDITOR_DEFAULT_HEIGHT: number = 10;
+
+// List of all symmetries in the editor
+export const MAP_EDITOR_SYMMETRIES = ["none", "horizontal",  "vertical", "rotational"];
+export type EditorSymmetry = typeof MAP_EDITOR_SYMMETRIES[number];
 
 export class MapEditor {
     // TODO: not completed
@@ -63,7 +67,10 @@ export class MapEditor {
     unitPixel: number = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
     blocks!: string[][];                           // Serial names of each block. `blocks[j][i]` is the block on jth row and ith colume.
     blockImgs!: (PIXI.Container | undefined)[][];  // Images of each block on the canvas.
+    
+    // the following fields are modifiable by the UI
     activateBlock: string = "";
+    symmetry: EditorSymmetry = "none";
     
     constructor(elements: Map<string, ElementData>, imagePath: Map<string, string>, textures: Map<string, PIXI.Texture>) {
         this.elements = elements;
@@ -91,12 +98,12 @@ export class MapEditor {
         // add solid blocks on the boundary of map
         this.blockImgs = Array(this.height).fill(null).map((i, _) => Array(this.width).fill(undefined));
         for(let i = 0; i < this.height; i++) {
-            this.replaceTile(i, 0, "SldBlk");
-            this.replaceTile(i, this.width - 1, "SldBlk");
+            this.replaceSingleTile(i, 0, "SldBlk");
+            this.replaceSingleTile(i, this.width - 1, "SldBlk");
         }
         for(let j = 1; j < this.width - 1; j++) {
-            this.replaceTile(0, j, "SldBlk");
-            this.replaceTile(this.height - 1, j, "SldBlk");
+            this.replaceSingleTile(0, j, "SldBlk");
+            this.replaceSingleTile(this.height - 1, j, "SldBlk");
         }
     }
 
@@ -110,7 +117,7 @@ export class MapEditor {
         this.resize();
     }
 
-    replaceTile(i: number, j: number, newName: string) {
+    replaceSingleTile(i: number, j: number, newName: string) {
         this.blocks[i][j] = newName;
         if(this.blockImgs[i][j]) {
             this.app.stage.removeChild(this.blockImgs[i][j]!!);
@@ -122,6 +129,23 @@ export class MapEditor {
             this.blockImgs[i][j]!!.x = (j + 0.5) * this.unitPixel;
             this.blockImgs[i][j]!!.y = (i + 0.5) * this.unitPixel;
             this.app.stage.addChild(this.blockImgs[i][j]!!);
+        }
+    }
+
+    replaceTile(i: number, j: number, newName: string) {
+        this.replaceSingleTile(i, j, newName);
+        switch(this.symmetry) {
+            case "none":
+                break;
+            case "horizontal":
+                this.replaceSingleTile(i, this.width - 1 - j, newName);
+                break;
+            case "vertical":
+                this.replaceSingleTile(this.height - 1 - i, j, newName);    
+                break;
+            case "rotational":
+                this.replaceSingleTile(this.height - 1 - i, this.width - 1 - j, newName);
+                break;
         }
     }
 

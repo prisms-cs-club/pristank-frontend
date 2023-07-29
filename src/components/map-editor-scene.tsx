@@ -1,8 +1,12 @@
 import styles from '@/app/page.module.css';
 import mapEditorStyles from '@/app/map-editor/map-editor.module.css';
-import { MAP_EDITOR_DEFAULT_HEIGHT, MAP_EDITOR_DEFAULT_WIDTH, MapEditor } from '@/map-editor';
-import { ChangeEvent, useEffect, useRef, useState } from 'react';
+import { MAP_EDITOR_SYMMETRIES, MAP_EDITOR_DEFAULT_HEIGHT, MAP_EDITOR_DEFAULT_WIDTH, MapEditor } from '@/map-editor';
+import React, { ChangeEvent, useEffect } from 'react';
 
+/**
+ * Save the map creation event corresponding to the map editor into a json file.
+ * @param mapEditor map editor object
+ */
 function save(mapEditor: MapEditor) {
     const file = new Blob([JSON.stringify(mapEditor.getMapCrtEvent())], {type: "application/json"});
     const link = URL.createObjectURL(file);
@@ -29,6 +33,22 @@ function inputWithMinMax(e: ChangeEvent<HTMLInputElement>) {
     return value;
 }
 
+function toggleHide(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+    const target = e.target as HTMLButtonElement;
+    const option = target.innerText;
+    if(option == "hide") {
+        target.innerText = "show";
+        for(const element of document.getElementsByClassName("to-hide")) {
+            (element as HTMLElement).style.display = "none";
+        }
+    } else {
+        target.innerText = "hide";
+        for(const element of document.getElementsByClassName("to-hide")) {
+            (element as HTMLElement).style.removeProperty("display");
+        }
+    }
+}
+
 export default function MapEditorScene({mapEditor}: {mapEditor: MapEditor}) {
     useEffect(() => {
         // append canvas
@@ -50,7 +70,7 @@ export default function MapEditorScene({mapEditor}: {mapEditor: MapEditor}) {
                 image.classList.add(mapEditorStyles["activated"]);
             }
             const abbr = document.createElement("abbr");
-            // TODO: abbr
+            abbr.title = name;
             abbr.appendChild(image);
             blocks.appendChild(abbr);
         }
@@ -78,7 +98,24 @@ export default function MapEditorScene({mapEditor}: {mapEditor: MapEditor}) {
                     <div className={mapEditorStyles["blocks"]} id="blocks"></div>
                 </div>
                 <div className={styles["card"]}>
-                    <a className={mapEditorStyles["save"]} onClick={() => save(mapEditor)}>save</a>
+                    <p>Symmetry</p>
+                    <select onChange={e => {mapEditor.symmetry = e.target.value;}}>
+                        {
+                            MAP_EDITOR_SYMMETRIES.map((symmetry) => <option key={symmetry} value={symmetry}>{symmetry}</option>)
+                        }
+                    </select>
+                </div>
+                <div className={styles["card"]}>
+                    <a className={mapEditorStyles["save"]} onClick={() => save(mapEditor)}>save as json</a>
+                </div>
+            </div>
+            <div className={styles["right-panel"]}>
+                <div className={styles["card"]}>
+                    <button onClick={e => toggleHide(e)}>hide</button>
+                </div>
+                <div className={styles["card"] + " " + "to-hide"}>
+                    <p>Select a block in the second panel. Left click to place the block. Press <code>ctrl</code> or <code>shift</code> and left click to remove the block.</p>
+                    <p>Select a symmetry to automatically place or remove another block symmetric to the position you choosed.</p>
                 </div>
             </div>
         </div>

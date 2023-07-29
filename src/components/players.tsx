@@ -1,12 +1,12 @@
 'use client';
 
-import { Player, PlayerState } from "@/player";
+import { PlayerElement, PlayerState } from "@/player";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import styles from "@/app/page.module.css";
 import { GameDisplay } from "@/game-display";
 import { GameContext } from "./game-scene";
 
-export function PlayerPanel(props: { player: Player }) {
+export function PlayerPanel(props: { player: PlayerElement }) {
     const player = useRef(props.player);
     const [state, setState] = useState<PlayerState>(player.current.state);
     useEffect(() => {

@@ -1,5 +1,6 @@
+import { GameElement } from './element';
 import { GameDisplay } from './game-display';
-import { Player, assignColor } from './player';
+import { PlayerElement, assignColor } from './player';
 
 export type EventParams = { [key: string]: any };
 export type EventBody = (game: GameDisplay, param: EventParams) => void;
@@ -38,28 +39,25 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         for(let j = 0; j < game.height; j++) {
             for(let i = 0; i < game.width; i++) {
                 if(newMap[j * game.width + i] && newMap[j * game.width + i] != "") {
-                    game.addElement(uid, newMap[j * game.width + i], i + 0.5, game.height - j - 0.5, 0, 1, 1);
+                    const type = game.elemData.get(newMap[j * game.width + i])!!;
+                    const elem = new GameElement(type, game, i + 0.5, game.height - j - 0.5, 0, 1, 1);
+                    game.addElement(uid, elem);
                     uid++;
                 }
             }
         }
     },
     "EleCrt": (game, param) => {
-        // special case of Tank
+        const type = game.elemData.get(param.name)!!;
         if(param.name == "Tk") {
-            if(!param.player) {
-                throw new Error("Invalid event parameter: `player` field is undefined in event.");
-            }
-            const bgColor = assignColor();
-            const elem = game.addElement(param.uid, param.name, param.x, param.y, param.rad, param.width, param.height, bgColor);
-            // add the player to the game
-            // DON'T replace it with `map.players.push(...)` because `player` array need to be mutated here.
-            game.players = [...game.players, new Player(elem, param.player!!, 5, 150, bgColor)];
-            if(game.setPlayers != undefined) {
-                game.setPlayers(game.players);
-            }
+            // special case of Tank
+            const elem = new PlayerElement(type, game, param.x, param.y, param.player, 5, param.rad, 150, assignColor()); // TODO: vision range and money
+            game.addElement(param.uid, elem);
+            game.players = [...game.players, elem];
+            game.setPlayers?.(game.players);
         } else {
-            game.addElement(param.uid, param.name, param.x, param.y, param.rad, param.width, param.height);
+            const elem = new GameElement(type, game, param.x, param.y, param.rad, param.width ?? type.width, param.height ?? type.height);
+            game.addElement(param.uid, elem);
         }
     },
     "EleRmv": (game, param) => {
@@ -71,8 +69,8 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             elem.x = param.x ?? elem.x;
             elem.y = param.y ?? elem.y;
             elem.rad = param.rad ?? elem.rad;
-            elem.hp = param.hp ?? elem.hp;
+            elem.setHp(param.hp ?? elem.hp);
+            elem.update();
         }
-        game.render();
     }
 };

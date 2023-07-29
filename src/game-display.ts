@@ -2,7 +2,7 @@ import { UID } from "./utils/type";
 import { ElementData, GameElement } from "./element";
 import { GAME_EVENTS, GameEvent } from "./event";
 import * as PIXI from "pixi.js";
-import { Player } from "./player";
+import { PlayerElement } from "./player";
 import { KeyBinding, actions } from "./action";
 import { Queue } from "@datastructures-js/queue";
 
@@ -41,8 +41,8 @@ export class GameDisplay {
     elemData: Map<string, ElementData>;   // graphics data of each element, including its width, height, hp, etc.
     elemList: Map<UID, GameElement>;      // Mapping from all element's UID to the element object.
     eventQueue: Queue<GameEvent>; // Event queue. The event with the lowest timestamp will be processed first.
-    players: Player[];
-    setPlayers?: (players: Player[]) => void;
+    players: PlayerElement[];
+    setPlayers?: (players: PlayerElement[]) => void;
     errorCallback?: (messages: string[]) => void; // If this function is called, the game will terminate immediately.
 
     constructor(
@@ -177,13 +177,7 @@ export class GameDisplay {
      * @param x x coordinate of the element.
      * @param y y coordinate of the element.
      */
-    addElement(uid: UID, name: string, x: number, y: number, rad?: number, width?: number, height?: number, bgColor?: PIXI.Color) {
-        const data = this.elemData.get(name)!!;
-        const element = new GameElement(
-            data, this, x, y, rad,
-            width ?? data.width, height ?? data.height,
-            bgColor
-        );
+    addElement(uid: UID, element: GameElement) {
         this.elemList.set(uid, element);
         this.app.stage.addChild(element.outerContainer);
         return element;
@@ -199,17 +193,8 @@ export class GameDisplay {
             this.app.stage.removeChild(element.outerContainer);
             this.elemList.delete(uid);
             if(element.type.group == "tank") {
-                this.players = this.players.filter(player => { // filter out the dead player
-                    const condition = player.element != element;
-                    if(!condition && this.options.mode.kind == "RealTime" && player.name == this.options.mode.name) {
-                        // In real-time mode, if the player you are controlling is dead, pop up the error panel.
-                        this.errorCallback?.(["You are dead!"]);
-                    }
-                    return condition;
-                });
-                if(this.setPlayers != undefined) {
-                    this.setPlayers(this.players);  // call the `setPlayers` function to update the left panel
-                }
+                this.players = this.players.filter(p => p != element);
+                this.setPlayers?.(this.players);
             }
         }
     }

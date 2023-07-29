@@ -1,6 +1,7 @@
 import * as PIXI from "pixi.js";
-import { GameElement } from "./element";
+import { ElementData, GameElement } from "./element";
 import { HSVtoRGB } from "./utils/color";
+import { GameDisplay } from "./game-display";
 
 export const PLAYER_COLOR_LIST = [
     new PIXI.Color("#114514"),
@@ -31,29 +32,25 @@ export type PlayerState = {
     visionRadius: number; // Vision radius
 };
 
-export class Player {
-    element: GameElement;     // The element which player is controlling.
+export class PlayerElement extends GameElement {
     name: string;             // Name of the player.
     color: PIXI.Color;        // Theme color (tank color and text color) of the player.
     state: PlayerState;       // State of the player.
     setState?: (state: PlayerState) => void;
 
-    constructor(element: GameElement, name: string, visionRange: number, money?: number, color?: PIXI.Color) {
-        this.element = element;
+    constructor(type: ElementData, gameIn: GameDisplay, x: number, y: number, name: string, visionRange: number, rad?: number, money?: number, color?: PIXI.Color) {
+        super(type, gameIn, x, y, rad, type.width, type.height, color);
         this.name = name;
         this.state = {
             money: money ?? 0,
-            hp: element.hp!!,
+            hp: type.hp!!,
             visionRadius: visionRange
         }
         this.color = color ?? assignColor();
     }
 
-    get hp() {
-        return this.element.hp!!;
-    }
-
-    set hp(value: number) {
+    setHp(value: number) {
+        super.hp = value;
         this.setState?.({ ...this.state!!, hp: value });
     }
 }
