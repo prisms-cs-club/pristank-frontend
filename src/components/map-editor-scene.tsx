@@ -12,7 +12,13 @@ function save(mapEditor: MapEditor) {
     const link = URL.createObjectURL(file);
     const a = document.getElementsByClassName(mapEditorStyles["save"])[0];
     a.setAttribute("href", link);
-    a.setAttribute("download", "map.json");
+}
+
+function copyToClipbord(mapEditor: MapEditor) {
+    const text = JSON.stringify(mapEditor.getMapCrtEvent());
+    navigator.clipboard.writeText(text).then(() => {
+        window.alert("copied to clipboard");
+    });
 }
 
 function inputWithMinMax(e: ChangeEvent<HTMLInputElement>) {
@@ -36,13 +42,13 @@ function inputWithMinMax(e: ChangeEvent<HTMLInputElement>) {
 function toggleHide(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     const target = e.target as HTMLButtonElement;
     const option = target.innerText;
-    if(option == "hide") {
-        target.innerText = "show";
+    if(option == "hide help") {
+        target.innerText = "show help";
         for(const element of document.getElementsByClassName("to-hide")) {
             (element as HTMLElement).style.display = "none";
         }
     } else {
-        target.innerText = "hide";
+        target.innerText = "hide help";
         for(const element of document.getElementsByClassName("to-hide")) {
             (element as HTMLElement).style.removeProperty("display");
         }
@@ -93,6 +99,8 @@ export default function MapEditorScene({mapEditor}: {mapEditor: MapEditor}) {
                             mapEditor.setHeight(value);
                         }} />
                     </div>
+                    <p className={mapEditorStyles["warn"] + " " + "to-hide"}>Change width and height will refresh the map.</p>
+                    <p className={mapEditorStyles["warn"] + " " + "to-hide"}>Please save or copy the map before resizing it.</p>
                 </div>
                 <div className={styles["card"]}>
                     <div className={mapEditorStyles["blocks"]} id="blocks"></div>
@@ -105,13 +113,14 @@ export default function MapEditorScene({mapEditor}: {mapEditor: MapEditor}) {
                         }
                     </select>
                 </div>
-                <div className={styles["card"]}>
-                    <a className={mapEditorStyles["save"]} onClick={() => save(mapEditor)}>save as json</a>
+                <div className={styles["card"]} style={{display: "flex", flexDirection: "column"}}>
+                    <a className={mapEditorStyles["save"]} onClick={() => save(mapEditor)} download="map.json">save as json</a>
+                    <a className={mapEditorStyles["save"]} onClick={() => copyToClipbord(mapEditor)}>copy to clipboard</a>
                 </div>
             </div>
             <div className={styles["right-panel"]}>
                 <div className={styles["card"]}>
-                    <button onClick={e => toggleHide(e)}>hide</button>
+                    <button onClick={e => toggleHide(e)}>hide help</button>
                 </div>
                 <div className={styles["card"] + " " + "to-hide"}>
                     <p>Select a block in the second panel. Left click to place the block. Press <code>ctrl</code> or <code>shift</code> and left click to remove the block.</p>

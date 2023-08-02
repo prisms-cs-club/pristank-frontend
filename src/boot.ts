@@ -2,11 +2,12 @@ import { createElement } from "react";
 import { KeyBinding } from "./action";
 import TextBox from "@/components/text-box";
 import { ElementData, ElementModelPart } from "./element";
-import { GAME_EVENTS, GameEvent } from "./event";
+import { EventEntry, GAME_EVENTS, GameEvent, InitEvent } from "./event";
 import { GameDisplay, GameMode, Observer, RealTime, Replay } from "./game-display";
 import { Task, Tasker } from "./utils/tasker";
 import * as PIXI from "pixi.js";
 import ReactDOM from "react-dom/client";
+import { PRICING_RULES, PricingRule } from "./market";
 
 export interface LoadReplay {
     readonly kind: "Replay";
@@ -39,6 +40,7 @@ export class LoadOptions {
 
 /**
  * Load all resources required to launch the game.
+ * During loading, the first `Init` event will be consumed and the event after that will be passed to the game.
  * @param options Loading options. This includes all adjustable options when loading the game.
  * @param taskStart Callback function when a task starts executing.
  * @param taskComplete Callback function when a task completes executing.
@@ -82,16 +84,16 @@ export function load(options: LoadOptions) {
             const replayMode = options.mode;
             /*** Replay Mode ***/
             const replayFile = replayMode.file;
-            type EventEntry = { t: number, [key: string]: any };   // Event in replay file's format
-            const loadReplay: Task<GameEvent[]> = {
+            const loadReplay: Task<[GameEvent[], InitEvent]> = {
                 // load replay file
                 prerequisite: [],
                 callback: async () => {
-                    const data = (await fetch(replayMode.file)).json();
-                    const events: GameEvent[] = (await data as EventEntry[]).map(
+                    const data = await (await fetch(replayMode.file)).json() as EventEntry[];
+                    const initEvent = data[0];
+                    const events: GameEvent[] = data.splice(1, data.length).map(
                         entry => new GameEvent(entry.t, GAME_EVENTS[entry.type], entry)
                     );
-                    return events;
+                    return [events, initEvent as InitEvent];
                 }
             };
 
@@ -101,7 +103,7 @@ export function load(options: LoadOptions) {
                 callback: async (
                     elemData: Map<string, ElementData>,
                     textures: Map<string, PIXI.Texture>,
-                    replay: GameEvent[]
+                    [replay, initEvent]: [GameEvent[], InitEvent]
                 ) => {
                     const app = new PIXI.Application({
                         width: window.innerWidth,
@@ -109,7 +111,11 @@ export function load(options: LoadOptions) {
                         backgroundColor: 0x000000
                     });
                     const mode: Replay = { kind: "Replay", events: replay };
-                    const game = new GameDisplay(app, textures, elemData, { mode, displayHP: options.displayHP });
+                    const game = new GameDisplay(app, textures, elemData, {
+                        mode,
+                        pricingRule: PRICING_RULES[initEvent.pricingRule],
+                        displayHP: options.displayHP
+                    });
                     return game;
                 }
             }
@@ -166,11 +172,18 @@ export function load(options: LoadOptions) {
                             backgroundColor: 0x000000
                         });
                         const mode: RealTime = { kind: "RealTime", socket, keyBinding, name };
-                        const game = new GameDisplay(app, textures, elemData, { mode, displayHP: options.displayHP });
                         socket.onopen = _ => {
                             socket.send(name);
-                            resolve(game);
                         }
+                        socket.onmessage = msg => {
+                            const initEvent = JSON.parse(msg.data) as InitEvent;
+                            const game = new GameDisplay(app, textures, elemData, {
+                                mode,
+                                pricingRule: PRICING_RULES[initEvent.pricingRule],
+                                displayHP: options.displayHP
+                            });
+                            resolve(game);
+                        };
                         socket.onclose = _ => {
                             reject(`Cannot establish connection to ${realTimeMode.addr}`);
                         }
@@ -206,11 +219,18 @@ export function load(options: LoadOptions) {
                             backgroundColor: 0x000000
                         });
                         const mode: Observer = { kind: "Observer", socket };
-                        const game = new GameDisplay(app, textures, elemData, { mode, displayHP: options.displayHP });
                         socket.onopen = _ => {
                             socket.send("OBSERVER");
-                            resolve(game);
                         }
+                        socket.onmessage = msg => {
+                            const initEvent = JSON.parse(msg.data) as InitEvent;
+                            const game = new GameDisplay(app, textures, elemData, {
+                                mode,
+                                pricingRule: PRICING_RULES[initEvent.pricingRule],
+                                displayHP: options.displayHP
+                            });
+                            resolve(game);
+                        };
                         socket.onclose = _ => {
                             reject(`Cannot establish connection to ${addr}`);
                         }

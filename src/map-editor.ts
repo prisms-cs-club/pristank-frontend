@@ -57,7 +57,6 @@ export const MAP_EDITOR_SYMMETRIES = ["none", "horizontal",  "vertical", "rotati
 export type EditorSymmetry = typeof MAP_EDITOR_SYMMETRIES[number];
 
 export class MapEditor {
-    // TODO: not completed
     elements: Map<string, ElementData>;
     imagePath: Map<string, string>;       // path of each part of the element
     textures: Map<string, PIXI.Texture>;
@@ -171,6 +170,7 @@ export class MapEditor {
         }
         return {
             "type": "MapCrt",
+            "t": 0,
             "x": this.width,
             "y": this.height,
             "initUid": 0,

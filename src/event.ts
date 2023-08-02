@@ -2,8 +2,7 @@ import { GameElement } from './element';
 import { GameDisplay } from './game-display';
 import { PlayerElement, assignColor } from './player';
 
-export type EventParams = { [key: string]: any };
-export type EventBody = (game: GameDisplay, param: EventParams) => void;
+export type EventBody = (game: GameDisplay, param: EventEntry) => void;
 
 /**
  * Game event class. Each event is defined with its event type, timestamp when the event occurs,
@@ -12,8 +11,8 @@ export type EventBody = (game: GameDisplay, param: EventParams) => void;
 export class GameEvent {
     t: number;           // timestamp of this event (number of miliseconds since the game starts)
     callback: EventBody;
-    params: EventParams;
-    constructor(timestamp: number, callback: EventBody, params: EventParams) {
+    params: EventEntry;
+    constructor(timestamp: number, callback: EventBody, params: EventEntry) {
         this.t = timestamp;
         this.callback = callback;
         this.params = params;
@@ -51,10 +50,10 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         const type = game.elemData.get(param.name)!!;
         if(param.name == "Tk") {
             // special case of Tank
-            const elem = new PlayerElement(type, game, param.x, param.y, param.player, 5, param.rad, 150, assignColor()); // TODO: vision range and money
+            const elem = new PlayerElement(type, game, param.x, param.y, param.player, 5, param.rad, param.money ?? 150, assignColor()); // TODO: vision range and money
             game.addElement(param.uid, elem);
-            game.players = [...game.players, elem];
-            game.setPlayers?.(game.players);
+            game.players.set(elem.name, elem);
+            game.setPlayers?.(Array.from(game.players.values()));
         } else {
             const elem = new GameElement(type, game, param.x, param.y, param.rad, param.width ?? type.width, param.height ?? type.height);
             game.addElement(param.uid, elem);
@@ -72,5 +71,24 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             elem.setHp(param.hp ?? elem.hp);
             elem.update();
         }
-    }
+    },
+    "MktUpd": (game, param) => {
+        game.options.pricingRule.processEvent(param);
+    },
+};
+
+
+/**
+ * Event in replay file's format.
+ */
+export type EventEntry = { type: string, t: number, [key: string]: any };
+
+/**
+ * Format of the initialization event.
+ * Since `InitEvent` is special, it is dealt before the game is created.
+ */
+export type InitEvent = {
+    type: "init",
+    t: number,
+    pricingRule: string,
 };

@@ -1,5 +1,9 @@
 [
     {
+        "type": "Init",
+        "t": 0
+    },
+    {
         "type": "MapCrt",
         "t": 0,
         "x": 7,

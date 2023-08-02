@@ -28,8 +28,13 @@ a.save {
     border: 2px solid #000000;
     border-radius: 8px;
     padding: 5px;
+    margin: 5px 0;
 }
 
 a.save:hover {
     text-decoration: underline;
+}
+
+p.warn {
+    color: #d61111;
 }

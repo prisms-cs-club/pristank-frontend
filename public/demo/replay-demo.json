@@ -1,7 +1,10 @@
 [
     {
-        "type": "MapCrt",
-        "t": 0,
+        "type": "Init","t": 0,
+        "pricingRule": "auction"
+    },
+    {
+        "type": "MapCrt","t": 0,
         "x": 7,
         "y": 6,
         "map": [
@@ -14,8 +17,7 @@
         ]
     },
     {
-        "type": "EleCrt",
-        "t": 1000,
+        "type": "EleCrt","t": 1000,
         "uid": 28,
         "name": "Tk",
         "x": 1.5,
@@ -23,14 +25,12 @@
         "player": "A"
     },
     {
-        "type": "EleUpd",
-        "t": 2000,
+        "type": "EleUpd","t": 2000,
         "uid": 28,
         "rad": -1.0
     },
     {
-        "type": "EleCrt",
-        "t": 3000,
+        "type": "EleCrt","t": 3000,
         "uid": 29,
         "name": "Tk",
         "x": 5.5,
@@ -39,14 +39,39 @@
         "player": "B"
     },
     {
-        "type": "EleUpd",
-        "t": 4000,
+        "type": "EleUpd","t": 4000,
         "uid": 29,
         "rad": 2.14159
     },
     {
-        "type": "EleCrt",
-        "t": 5000,
+        "type": "MktUpd","t": 5000,
+        "toSell": ["maxHP", 50],
+        "minBid": 50,
+        "duration": 5000
+    },
+    {
+        "type": "MktUpd","t": 6500,
+        "bidder": "A",
+        "price": 100
+    },
+    {
+        "type": "MktUpd","t": 7300,
+        "bidder": "B",
+        "price": 110
+    },
+    {
+        "type": "MktUpd","t": 8500,
+        "bidder": "A",
+        "price": 120
+    },
+    {
+        "type": "MktUpd","t": 10000,
+        "buyer": "A",
+        "price": 120,
+        "duration": 10000
+    },
+    {
+        "type": "EleCrt","t": 11000,
         "uid": 30,
         "name": "Blt",
         "x": 2.0,
@@ -54,92 +79,77 @@
         "rad": 0.0
     },
     {
-        "type": "EleUpd",
-        "t": 5500,
+        "type": "EleUpd","t": 11500,
         "uid": 28,
         "hp": 140
     },
     {
-        "type": "EleUpd",
-        "t": 5600,
+        "type": "EleUpd","t": 11600,
         "uid": 28,
         "hp": 130
     },
     {
-        "type": "EleUpd",
-        "t": 5700,
+        "type": "EleUpd","t": 11700,
         "uid": 28,
         "hp": 120
     },
     {
-        "type": "EleUpd",
-        "t": 5800,
+        "type": "EleUpd","t": 11800,
         "uid": 28,
         "hp": 110
     },
     {
-        "type": "EleUpd",
-        "t": 5900,
+        "type": "EleUpd","t": 11900,
         "uid": 28,
         "hp": 100
     },
     {
-        "type": "EleUpd",
-        "t": 6000,
+        "type": "EleUpd","t": 12000,
         "uid": 28,
         "hp": 90
     },
     {
-        "type": "EleUpd",
-        "t": 6100,
+        "type": "EleUpd","t": 12100,
         "uid": 28,
         "hp": 80
     },
     {
-        "type": "EleUpd",
-        "t": 6200,
+        "type": "EleUpd","t": 12200,
         "uid": 28,
         "hp": 70
     },
     {
-        "type": "EleUpd",
-        "t": 6300,
+        "type": "EleUpd","t": 12300,
         "uid": 28,
         "hp": 60
     },
     {
-        "type": "EleUpd",
-        "t": 6400,
+        "type": "EleUpd","t": 12400,
         "uid": 28,
         "hp": 50
     },
     {
-        "type": "EleUpd",
-        "t": 6500,
+        "type": "EleUpd","t": 12500,
         "uid": 28,
         "hp": 40
     },
     {
-        "type": "EleUpd",
-        "t": 6600,
+        "type": "EleUpd","t": 12600,
         "uid": 28,
         "hp": 30
     },
     {
-        "type": "EleUpd",
-        "t": 6700,
+        "type": "EleUpd","t": 12700,
         "uid": 28,
         "hp": 20
     },
     {
-        "type": "EleUpd",
-        "t": 6800,
+        "type": "EleUpd","t": 12800,
         "uid": 28,
         "hp": 10
     },
     {
-        "type": "EleRmv",
-        "t": 7000,
+        "type": "EleRmv","t": 12900,
         "uid": 28
     }
 ]

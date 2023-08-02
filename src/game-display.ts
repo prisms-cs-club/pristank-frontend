@@ -1,10 +1,11 @@
 import { UID } from "./utils/type";
 import { ElementData, GameElement } from "./element";
-import { GAME_EVENTS, GameEvent } from "./event";
+import { EventEntry, GAME_EVENTS, GameEvent } from "./event";
 import * as PIXI from "pixi.js";
 import { PlayerElement } from "./player";
 import { KeyBinding, actions } from "./action";
 import { Queue } from "@datastructures-js/queue";
+import { PricingRule } from "./market";
 
 export interface Replay {
     readonly kind: "Replay";
@@ -28,6 +29,7 @@ export type GameMode = Replay | RealTime | Observer;
 export type GameOptions = {
     mode: GameMode;
     displayHP: boolean;
+    pricingRule: PricingRule;
 }
 // TODO: Add launch options (e.g. display all/display visible only, real time/replay, etc.)
 
@@ -41,7 +43,7 @@ export class GameDisplay {
     elemData: Map<string, ElementData>;   // graphics data of each element, including its width, height, hp, etc.
     elemList: Map<UID, GameElement>;      // Mapping from all element's UID to the element object.
     eventQueue: Queue<GameEvent>; // Event queue. The event with the lowest timestamp will be processed first.
-    players: PlayerElement[];
+    players: Map<string, PlayerElement>;  // Mapping from each player's name to its element.
     setPlayers?: (players: PlayerElement[]) => void;
     errorCallback?: (messages: string[]) => void; // If this function is called, the game will terminate immediately.
 
@@ -63,7 +65,7 @@ export class GameDisplay {
         this.elemData = elemData;
         this.elemList = new Map();
         this.eventQueue = (options.mode.kind == "Replay") ? new Queue(options.mode.events) : new Queue();
-        this.players = [];
+        this.players = new Map();
         this.errorCallback = errorCallback;
     
         // initialize ticker
@@ -82,7 +84,7 @@ export class GameDisplay {
             const socket = options.mode.socket!!;
             // intiialize socket
             socket.onmessage = msgEvent => {
-                const data = JSON.parse(msgEvent.data) as { [key: string]: any };
+                const data = JSON.parse(msgEvent.data) as EventEntry;
                 const event = new GameEvent(data.t, GAME_EVENTS[data.type], data);
                 this.eventQueue.enqueue(event);   // TODO: enqueue or evaluate now?
             };
@@ -192,9 +194,10 @@ export class GameDisplay {
         if(element) {
             this.app.stage.removeChild(element.outerContainer);
             this.elemList.delete(uid);
-            if(element.type.group == "tank") {
-                this.players = this.players.filter(p => p != element);
-                this.setPlayers?.(this.players);
+            if(element instanceof PlayerElement) {
+                this.players.delete(element.name);
+                this.setPlayers?.(Array.from(this.players.values()));
+                // TODO: more efficient implementation
             }
         }
     }
@@ -206,5 +209,14 @@ export class GameDisplay {
      */
     getElement(uid: UID) {
         return this.elemList.get(uid);
+    }
+
+    /**
+     * Get the color of a player given its name.
+     * @param name name of the player
+     * @returns the hexadecimal representation of the player's color
+     */
+    getPlayerColor(name: string) {
+        return this.players.get(name)?.color.toHex()
     }
 }
