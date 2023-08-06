@@ -20,7 +20,7 @@ function timer(millis: number, callback: (secs: number) => void) {
 export interface PricingRule {
     name: string;
     init: (game: GameDisplay) => void;
-    processEvent: (event: EventEntry) => void;
+    processEvent: (game: GameDisplay, event: EventEntry) => void;
 };
 
 export class AuctionRule implements PricingRule {
@@ -35,7 +35,7 @@ export class AuctionRule implements PricingRule {
             <AuctionRulePanel rule={this} game={game}></AuctionRulePanel>
         );
     }
-    processEvent(event: EventEntry) {
+    processEvent(game: GameDisplay, event: EventEntry) {
         if(event.toSell != undefined) {
             // start of auction
             const toSellStr = event.toSell[0] + " " + ((event.toSell[1] > 0)? '+': "") + `${event.toSell[1]}`;
@@ -44,14 +44,14 @@ export class AuctionRule implements PricingRule {
             timer(event.duration, this.setDuration);
         } else if(event.bidder != undefined) {
             // middle of auction
-            this.setLastBidder(event.bidder);
+            this.setLastBidder(game.players.get(event.bidder)!!.name);
             if(event.price != undefined) {
                 this.setMinBid(event.price);
             }
         } else {
             // end of auction
             this.setSelling(undefined);
-            this.setLastBidder(event.buyer!!);
+            this.setLastBidder(game.players.get(event.buyer!!)!!.name);
             this.setMinBid(event.price!!);
             if(event.duration != undefined) {
                 timer(event.duration, this.setDuration);

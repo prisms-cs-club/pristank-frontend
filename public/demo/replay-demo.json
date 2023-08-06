@@ -22,7 +22,8 @@
         "name": "Tk",
         "x": 1.5,
         "y": 1.5,
-        "player": "A"
+        "player": "A",
+        "money": 150
     },
     {
         "type": "EleUpd","t": 2000,
@@ -36,7 +37,8 @@
         "x": 5.5,
         "y": 4.5,
         "rad": 3.14159,
-        "player": "B"
+        "player": "B",
+        "money": 150
     },
     {
         "type": "EleUpd","t": 4000,
@@ -51,24 +53,29 @@
     },
     {
         "type": "MktUpd","t": 6500,
-        "bidder": "A",
+        "bidder": 28,
         "price": 100
     },
     {
         "type": "MktUpd","t": 7300,
-        "bidder": "B",
+        "bidder": 29,
         "price": 110
     },
     {
         "type": "MktUpd","t": 8500,
-        "bidder": "A",
+        "bidder": 28,
         "price": 120
     },
     {
         "type": "MktUpd","t": 10000,
-        "buyer": "A",
+        "buyer": 28,
         "price": 120,
         "duration": 10000
+    },
+    {
+        "type": "EleUpd", "t": 10000,
+        "uid": 28,
+        "money": 30
     },
     {
         "type": "EleCrt","t": 11000,

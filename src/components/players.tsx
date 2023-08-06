@@ -3,14 +3,12 @@
 import { PlayerElement, PlayerState } from "@/player";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import styles from "@/app/page.module.css";
-import { GameDisplay } from "@/game-display";
 import { GameContext } from "./game-scene";
 
 export function PlayerPanel(props: { player: PlayerElement }) {
     const player = useRef(props.player);
-    const [state, setState] = useState<PlayerState>(player.current.state);
+    const [state, setState] = useState<PlayerState>(player.current.getState());
     useEffect(() => {
-        player.current.state = state;
         player.current.setState = setState;
     }, [player, state]);
     return (
@@ -25,7 +23,7 @@ export function PlayerPanel(props: { player: PlayerElement }) {
 
 export function PlayersPanel() {
     const game = useContext(GameContext);
-    const [players, setPlayers] = useState(game!!.players);
+    const [players, setPlayers] = useState(Array.from(game!!.players.values()));
     useEffect(() => {
         if(game != undefined) {
             game.setPlayers = setPlayers;

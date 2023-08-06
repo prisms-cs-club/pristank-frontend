@@ -43,7 +43,7 @@ export class GameDisplay {
     elemData: Map<string, ElementData>;   // graphics data of each element, including its width, height, hp, etc.
     elemList: Map<UID, GameElement>;      // Mapping from all element's UID to the element object.
     eventQueue: Queue<GameEvent>; // Event queue. The event with the lowest timestamp will be processed first.
-    players: Map<string, PlayerElement>;  // Mapping from each player's name to its element.
+    players: Map<UID, PlayerElement>;     // Mapping from each player's UID to its element.
     setPlayers?: (players: PlayerElement[]) => void;
     errorCallback?: (messages: string[]) => void; // If this function is called, the game will terminate immediately.
 
@@ -195,7 +195,7 @@ export class GameDisplay {
             this.app.stage.removeChild(element.outerContainer);
             this.elemList.delete(uid);
             if(element instanceof PlayerElement) {
-                this.players.delete(element.name);
+                this.players.delete(uid);
                 this.setPlayers?.(Array.from(this.players.values()));
                 // TODO: more efficient implementation
             }
@@ -213,10 +213,10 @@ export class GameDisplay {
 
     /**
      * Get the color of a player given its name.
-     * @param name name of the player
+     * @param uid UID of the player
      * @returns the hexadecimal representation of the player's color
      */
-    getPlayerColor(name: string) {
-        return this.players.get(name)?.color.toHex()
+    getPlayerColor(uid: number) {
+        return this.players.get(uid)?.color.toHex()
     }
 }

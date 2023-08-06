@@ -50,9 +50,9 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         const type = game.elemData.get(param.name)!!;
         if(param.name == "Tk") {
             // special case of Tank
-            const elem = new PlayerElement(type, game, param.x, param.y, param.player, 5, param.rad, param.money ?? 150, assignColor()); // TODO: vision range and money
+            const elem = new PlayerElement(type, game, param.x, param.y, param.player, 5, param.rad, param.money!!, assignColor()); // TODO: vision range and money
             game.addElement(param.uid, elem);
-            game.players.set(elem.name, elem);
+            game.players.set(param.uid, elem);
             game.setPlayers?.(Array.from(game.players.values()));
         } else {
             const elem = new GameElement(type, game, param.x, param.y, param.rad, param.width ?? type.width, param.height ?? type.height);
@@ -68,12 +68,15 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             elem.x = param.x ?? elem.x;
             elem.y = param.y ?? elem.y;
             elem.rad = param.rad ?? elem.rad;
-            elem.setHp(param.hp ?? elem.hp);
+            elem.hp = param.hp ?? elem.hp;
+            if(param.money != undefined) {
+                (elem as PlayerElement).money = param.money;
+            }
             elem.update();
         }
     },
     "MktUpd": (game, param) => {
-        game.options.pricingRule.processEvent(param);
+        game.options.pricingRule.processEvent(game, param);
     },
 };
 

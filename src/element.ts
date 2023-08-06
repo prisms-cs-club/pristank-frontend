@@ -103,8 +103,4 @@ export class GameElement {
             this.hpBar.drawRect(-HP_BAR_WIDTH / 2, topLeftY, HP_BAR_WIDTH * hpRatio, HP_BAR_HEIGHT);
         }
     }
-
-    setHp(hp: number) {
-        this.hp = hp;
-    }
 }

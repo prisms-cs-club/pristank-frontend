@@ -26,6 +26,9 @@ export function assignColor() {
     return color;
 }
 
+/**
+ * Player state. This is the state of the player that will be displayed on the left side of the screen.
+ */
 export type PlayerState = {
     money: number;        // Amount of money the player currently owns.
     hp: number;
@@ -35,22 +38,28 @@ export type PlayerState = {
 export class PlayerElement extends GameElement {
     name: string;             // Name of the player.
     color: PIXI.Color;        // Theme color (tank color and text color) of the player.
-    state: PlayerState;       // State of the player.
+    money: number;            // Amount of money the player currently owns.
+    visionRadius: number;     // Vision radius
     setState?: (state: PlayerState) => void;
 
     constructor(type: ElementData, gameIn: GameDisplay, x: number, y: number, name: string, visionRange: number, rad?: number, money?: number, color?: PIXI.Color) {
         super(type, gameIn, x, y, rad, type.width, type.height, color);
         this.name = name;
-        this.state = {
-            money: money ?? 0,
-            hp: type.hp!!,
-            visionRadius: visionRange
-        }
+        this.money = money ?? 0;
+        this.visionRadius = visionRange;
         this.color = color ?? assignColor();
     }
 
-    setHp(value: number) {
-        super.hp = value;
-        this.setState?.({ ...this.state!!, hp: value });
+    override update() {
+        super.update();
+        this.setState?.(this.getState());
+    }
+
+    getState(): PlayerState {
+        return {
+            money: this.money,
+            hp: this.hp!!,
+            visionRadius: this.visionRadius
+        };
     }
 }
