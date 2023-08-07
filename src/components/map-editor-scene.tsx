@@ -99,7 +99,7 @@ export default function MapEditorScene({mapEditor}: {mapEditor: MapEditor}) {
                             mapEditor.setHeight(value);
                         }} />
                     </div>
-                    <p className={mapEditorStyles["warn"] + " " + "to-hide"}>Change width and height will refresh the map.</p>
+                    <p className={mapEditorStyles["warn"] + " " + "to-hide"}>Changing width and height will refresh the map.</p>
                     <p className={mapEditorStyles["warn"] + " " + "to-hide"}>Please save or copy the map before resizing it.</p>
                 </div>
                 <div className={styles["card"]}>
@@ -123,7 +123,7 @@ export default function MapEditorScene({mapEditor}: {mapEditor: MapEditor}) {
                     <button onClick={e => toggleHide(e)}>hide help</button>
                 </div>
                 <div className={styles["card"] + " " + "to-hide"}>
-                    <p>Select a block in the second panel. Left click to place the block. Press <code>ctrl</code> or <code>shift</code> and left click to remove the block.</p>
+                    <p>Select a type of block in the second panel and you will see a blue border indicating it being selected. Left click to place the block. Press <code>ctrl</code> or <code>shift</code> and left click to remove the block.</p>
                     <p>Select a symmetry to automatically place or remove another block symmetric to the position you choosed.</p>
                 </div>
             </div>

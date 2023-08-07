@@ -53,14 +53,27 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             const elem = new PlayerElement(type, game, param.x, param.y, param.player, 5, param.rad, param.money!!, assignColor()); // TODO: vision range and money
             game.addElement(param.uid, elem);
             game.players.set(param.uid, elem);
-            game.setPlayers?.(Array.from(game.players.values()));
+            if(game.options.mode.kind == "RealTime" && elem.name == game.options.mode.name) {
+                game.options.mode.myUID = param.uid;
+                game.setPlayers([elem]);
+            } else {
+                game.setPlayers(Array.from(game.players.values()));
+            }
         } else {
             const elem = new GameElement(type, game, param.x, param.y, param.rad, param.width ?? type.width, param.height ?? type.height);
             game.addElement(param.uid, elem);
         }
     },
     "EleRmv": (game, param) => {
-        game.removeElement(param.uid);
+        const elem = game.removeElement(param.uid);
+        if(elem instanceof PlayerElement) {
+            game.players.delete(param.uid);
+            if(game.options.mode.kind == "RealTime") {
+                game.setPlayers([game.players.get(game.options.mode.myUID!!)!!]);
+            } else {
+                game.setPlayers(Array.from(game.players.values()));
+            }
+        }
     },
     "EleUpd": (game, param) => {
         const elem = game.getElement(param.uid);

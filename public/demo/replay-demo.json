@@ -47,7 +47,7 @@
     },
     {
         "type": "MktUpd","t": 5000,
-        "toSell": ["maxHP", 50],
+        "toSell": ["maxHP", true, 50],
         "minBid": 50,
         "duration": 5000
     },

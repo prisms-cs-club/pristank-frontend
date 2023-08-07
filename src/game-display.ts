@@ -17,6 +17,7 @@ export interface RealTime {
     socket: WebSocket;
     keyBinding: KeyBinding;
     name: string;
+    myUID?: number;         // UID of the tank controlled by the player
 }
 
 export interface Observer {
@@ -44,7 +45,7 @@ export class GameDisplay {
     elemList: Map<UID, GameElement>;      // Mapping from all element's UID to the element object.
     eventQueue: Queue<GameEvent>; // Event queue. The event with the lowest timestamp will be processed first.
     players: Map<UID, PlayerElement>;     // Mapping from each player's UID to its element.
-    setPlayers?: (players: PlayerElement[]) => void;
+    setPlayers!: (players: PlayerElement[]) => void;
     errorCallback?: (messages: string[]) => void; // If this function is called, the game will terminate immediately.
 
     constructor(
@@ -178,8 +179,9 @@ export class GameDisplay {
      * @param type Type of the element.
      * @param x x coordinate of the element.
      * @param y y coordinate of the element.
+     * @returns The newly added element.
      */
-    addElement(uid: UID, element: GameElement) {
+    addElement(uid: UID, element: GameElement): GameElement {
         this.elemList.set(uid, element);
         this.app.stage.addChild(element.outerContainer);
         return element;
@@ -189,17 +191,13 @@ export class GameDisplay {
      * Remove an element with given UID from the board.
      * @param uid Unique identifier of the element to be removed.
      */
-    removeElement(uid: UID) {
+    removeElement(uid: UID): GameElement | undefined {
         const element = this.elemList.get(uid);
         if(element) {
             this.app.stage.removeChild(element.outerContainer);
             this.elemList.delete(uid);
-            if(element instanceof PlayerElement) {
-                this.players.delete(uid);
-                this.setPlayers?.(Array.from(this.players.values()));
-                // TODO: more efficient implementation
-            }
         }
+        return element;
     }
 
     /**

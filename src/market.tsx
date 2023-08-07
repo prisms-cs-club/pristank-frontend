@@ -38,7 +38,12 @@ export class AuctionRule implements PricingRule {
     processEvent(game: GameDisplay, event: EventEntry) {
         if(event.toSell != undefined) {
             // start of auction
-            const toSellStr = event.toSell[0] + " " + ((event.toSell[1] > 0)? '+': "") + `${event.toSell[1]}`;
+            let toSellStr = "";
+            if(event.toSell[1] == true || event.toSell[1] == 1) {
+                toSellStr = event.toSell[0] + " " + ((event.toSell[2] > 0)? '+': "") + `${event.toSell[2]}`;
+            } else {
+                toSellStr = event.toSell[0] + " =" + event.toSell[2];
+            }
             this.setSelling(toSellStr);
             this.setMinBid(event.minBid!!);
             timer(event.duration, this.setDuration);
