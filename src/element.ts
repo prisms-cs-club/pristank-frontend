@@ -52,6 +52,7 @@ export type ElementModelPart = {
  * Defines an element that may be displayed on the game screen.
  */
 export class GameElement {
+    // properties
     type: ElementData;
     gameIn: GameDisplay;
     x: number;
@@ -60,6 +61,10 @@ export class GameElement {
     width: number;
     height: number;
     hp?: number;
+    visible: boolean = true;          // whether this element is visible to the player
+                                      // It should be guaranteed that if the element is invisible, it will not be displayed on the game canvas.
+
+    // graphics elements
     hpBar?: PIXI.Graphics;
     outerContainer: PIXI.Container;   // container that has not been rotated
     innerContainer: PIXI.Container;   // container that has been rotated
@@ -102,5 +107,14 @@ export class GameElement {
             }
             this.hpBar.drawRect(-HP_BAR_WIDTH / 2, topLeftY, HP_BAR_WIDTH * hpRatio, HP_BAR_HEIGHT);
         }
+    }
+
+    /**
+     * Get the Euclidean distance from the center of this element to another element.
+     * @param elem The other element
+     * @returns The distance between this element and the other element
+     */
+    getDistanceTo(elem: GameElement): number {
+        return Math.sqrt((this.x - elem.x) ** 2 + (this.y - elem.y) ** 2);
     }
 }

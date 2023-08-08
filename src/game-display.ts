@@ -17,7 +17,8 @@ export interface RealTime {
     socket: WebSocket;
     keyBinding: KeyBinding;
     name: string;
-    myUID?: number;         // UID of the tank controlled by the player
+    myUID?: number;                 // UID of the tank controlled by the player
+    myPlayer?: PlayerElement;       // The tank controlled by the player
 }
 
 export interface Observer {
@@ -32,8 +33,11 @@ export type GameOptions = {
     displayHP: boolean;
     pricingRule: PricingRule;
 }
-// TODO: Add launch options (e.g. display all/display visible only, real time/replay, etc.)
 
+/**
+ * The game. This class is responsible for rendering the game screen, processing events, and
+ * maintaining the game state.
+ */
 export class GameDisplay {
     options: GameOptions;                  // TODO: a better design
     app: PIXI.Application;
@@ -183,7 +187,9 @@ export class GameDisplay {
      */
     addElement(uid: UID, element: GameElement): GameElement {
         this.elemList.set(uid, element);
-        this.app.stage.addChild(element.outerContainer);
+        if(element.visible) {
+            this.app.stage.addChild(element.outerContainer);
+        }
         return element;
     }
 
@@ -194,8 +200,10 @@ export class GameDisplay {
     removeElement(uid: UID): GameElement | undefined {
         const element = this.elemList.get(uid);
         if(element) {
-            this.app.stage.removeChild(element.outerContainer);
             this.elemList.delete(uid);
+            if(element.visible) {
+                this.app.stage.removeChild(element.outerContainer);
+            }
         }
         return element;
     }
@@ -216,5 +224,50 @@ export class GameDisplay {
      */
     getPlayerColor(uid: number) {
         return this.players.get(uid)?.color.toHex()
+    }
+
+    /**
+     * Make an element visible on the screen. This sets the `visible` field to true and adds the
+     * element's container to the stage.
+     * @param elem The element.
+     */
+    makeVisible(elem: GameElement) {
+        if(!elem.visible) {
+            elem.visible = true;
+            this.app.stage.addChild(elem.outerContainer); 
+        }
+    }
+
+    /**
+     * Make an element invisible on the screen. This sets the `visible` field to false and removes
+     * the element's container from the stage.
+     * @param elem The element.
+     */
+    makeInvisible(elem: GameElement) {
+        if(elem.visible) {
+            elem.visible = false;
+            this.app.stage.removeChild(elem.outerContainer);
+        }
+    }
+
+    /**
+     * Make every element visible on the screen.
+     */
+    makeAllVisible() {
+        for(const elem of this.elemList.values()) {
+            this.makeVisible(elem);
+        }
+    }
+
+    updateVisibility(player: PlayerElement, radius: number) {
+        this.elemList.forEach((elem, uid) => {
+            if(!(elem instanceof PlayerElement)) {
+                if(elem.getDistanceTo(player) <= player.visionRadius) {
+                    this.makeVisible(elem);
+                } else {
+                    this.makeInvisible(elem);
+                }
+            }
+        });
     }
 }

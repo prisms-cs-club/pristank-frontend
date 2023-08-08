@@ -23,7 +23,8 @@
         "x": 1.5,
         "y": 1.5,
         "player": "A",
-        "money": 150
+        "money": 150,
+        "visionRadius": 5
     },
     {
         "type": "EleUpd","t": 2000,
@@ -38,7 +39,8 @@
         "y": 4.5,
         "rad": 3.14159,
         "player": "B",
-        "money": 150
+        "money": 150,
+        "visionRadius": 5
     },
     {
         "type": "EleUpd","t": 4000,

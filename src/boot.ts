@@ -8,6 +8,7 @@ import { Task, Tasker } from "./utils/tasker";
 import * as PIXI from "pixi.js";
 import ReactDOM from "react-dom/client";
 import { PRICING_RULES, PricingRule } from "./market";
+import { strictField } from "./utils/other";
 
 export interface LoadReplay {
     readonly kind: "Replay";
@@ -113,7 +114,7 @@ export function load(options: LoadOptions) {
                     const mode: Replay = { kind: "Replay", events: replay };
                     const game = new GameDisplay(app, textures, elemData, {
                         mode,
-                        pricingRule: PRICING_RULES[initEvent.pricingRule],
+                        pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, "Invalid pricing rule."),
                         displayHP: options.displayHP
                     });
                     return game;
@@ -179,7 +180,7 @@ export function load(options: LoadOptions) {
                             const initEvent = JSON.parse(msg.data) as InitEvent;
                             const game = new GameDisplay(app, textures, elemData, {
                                 mode,
-                                pricingRule: PRICING_RULES[initEvent.pricingRule],
+                                pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, "Invalid pricing rule."),
                                 displayHP: options.displayHP
                             });
                             resolve(game);
@@ -226,7 +227,7 @@ export function load(options: LoadOptions) {
                             const initEvent = JSON.parse(msg.data) as InitEvent;
                             const game = new GameDisplay(app, textures, elemData, {
                                 mode,
-                                pricingRule: PRICING_RULES[initEvent.pricingRule],
+                                pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, "Invalid pricing rule."),
                                 displayHP: options.displayHP
                             });
                             resolve(game);

@@ -42,11 +42,11 @@ export class PlayerElement extends GameElement {
     visionRadius: number;     // Vision radius
     setState?: (state: PlayerState) => void;
 
-    constructor(type: ElementData, gameIn: GameDisplay, x: number, y: number, name: string, visionRange: number, rad?: number, money?: number, color?: PIXI.Color) {
+    constructor(type: ElementData, gameIn: GameDisplay, x: number, y: number, name: string, visionRadius: number, rad?: number, money?: number, color?: PIXI.Color) {
         super(type, gameIn, x, y, rad, type.width, type.height, color);
         this.name = name;
         this.money = money ?? 0;
-        this.visionRadius = visionRange;
+        this.visionRadius = visionRadius;
         this.color = color ?? assignColor();
     }
 

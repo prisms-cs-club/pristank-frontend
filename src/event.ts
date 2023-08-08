@@ -1,6 +1,7 @@
 import { GameElement } from './element';
 import { GameDisplay } from './game-display';
 import { PlayerElement, assignColor } from './player';
+import { assertDef } from './utils/other';
 
 export type EventBody = (game: GameDisplay, param: EventEntry) => void;
 
@@ -40,6 +41,11 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                 if(newMap[j * game.width + i] && newMap[j * game.width + i] != "") {
                     const type = game.elemData.get(newMap[j * game.width + i])!!;
                     const elem = new GameElement(type, game, i + 0.5, game.height - j - 0.5, 0, 1, 1);
+                    if(game.options.mode.kind == "RealTime") {
+                        // For real-time mode, every block should be invisible at first.
+                        // Otherwise the player can see the whole map at the beginning.
+                        elem.visible = false;
+                    }
                     game.addElement(uid, elem);
                     uid++;
                 }
@@ -47,45 +53,74 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         }
     },
     "EleCrt": (game, param) => {
-        const type = game.elemData.get(param.name)!!;
+        const type = assertDef(game.elemData.get(param.name), `Invalid element type: ${param.name}`);
         if(param.name == "Tk") {
             // special case of Tank
-            const elem = new PlayerElement(type, game, param.x, param.y, param.player, 5, param.rad, param.money!!, assignColor()); // TODO: vision range and money
+            const elem = new PlayerElement(
+                type, game, param.x, param.y,
+                assertDef(param.player, `Name of the player with uid ${param.uid} is undefined`),
+                assertDef(param.visionRadius, `vision radius of player \"${param.player}\" is undefined`),
+                param.rad,
+                assertDef(param.money, `Initial money of player \"${param.player}\" is undefined`),
+                assignColor()
+            );
             game.addElement(param.uid, elem);
             game.players.set(param.uid, elem);
             if(game.options.mode.kind == "RealTime" && elem.name == game.options.mode.name) {
                 game.options.mode.myUID = param.uid;
+                game.options.mode.myPlayer = elem;
                 game.setPlayers([elem]);
             } else {
                 game.setPlayers(Array.from(game.players.values()));
             }
         } else {
+            // Other elements. Depending on the game mode and vision radius, some elements may be invisible.
             const elem = new GameElement(type, game, param.x, param.y, param.rad, param.width ?? type.width, param.height ?? type.height);
+            if(game.options.mode.kind == "RealTime" &&
+                (game.options.mode.myPlayer == undefined || elem.getDistanceTo(game.options.mode.myPlayer) > game.options.mode.myPlayer.visionRadius)) {
+                elem.visible = false;
+            }
             game.addElement(param.uid, elem);
         }
     },
     "EleRmv": (game, param) => {
-        const elem = game.removeElement(param.uid);
+        const elem = game.removeElement(assertDef(param.uid, "Element remove event must have uid."));
         if(elem instanceof PlayerElement) {
             game.players.delete(param.uid);
             if(game.options.mode.kind == "RealTime") {
-                game.setPlayers([game.players.get(game.options.mode.myUID!!)!!]);
+                if(param.uid == game.options.mode.myUID) {
+                    // If this player dies, output an error message and set all element to visible.
+                    game.errorCallback?.(["You died!"]);
+                    game.makeAllVisible();
+                } else {
+                    // If in real-time mode, only the current player's status is visible.
+                    game.setPlayers([game.options.mode.myPlayer!!]);
+                }
             } else {
+                // Otherwise, all players' status are visible.
                 game.setPlayers(Array.from(game.players.values()));
             }
         }
     },
     "EleUpd": (game, param) => {
-        const elem = game.getElement(param.uid);
+        const elem = game.getElement(assertDef(param.uid, "Element update event must have uid."));
         if(elem) {
             elem.x = param.x ?? elem.x;
             elem.y = param.y ?? elem.y;
             elem.rad = param.rad ?? elem.rad;
             elem.hp = param.hp ?? elem.hp;
             if(param.money != undefined) {
-                (elem as PlayerElement).money = param.money;
+                const playerElem = (elem as PlayerElement);
+                playerElem.money = param.money ?? playerElem.money;
+                playerElem.visionRadius = param.visionRadius ?? playerElem.visionRadius;
             }
             elem.update();
+            if(game.options.mode.kind == "RealTime" && game.options.mode.myUID != undefined && param.uid == game.options.mode.myUID) {
+                const mode = game.options.mode;
+                // Properties of the player controlled by this program is updated in real-time mode.
+                // Therefore, update the visibility of elements around this player.
+                game.updateVisibility(elem as PlayerElement, mode.myPlayer!!.visionRadius);
+            }
         }
     },
     "MktUpd": (game, param) => {

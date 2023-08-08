@@ -1,11 +1,10 @@
 [
     {
-        "type": "Init",
-        "t": 0
+        "type": "Init","t": 0,
+        "pricingRule": "auction"
     },
     {
-        "type": "MapCrt",
-        "t": 0,
+        "type": "MapCrt","t": 0,
         "x": 7,
         "y": 6,
         "map": [
@@ -18,8 +17,7 @@
         ]
     },
     {
-        "type": "EleCrt",
-        "t": 1000,
+        "type": "EleCrt","t": 1000,
         "uid": 28,
         "name": "Tk",
         "x": 1.5,
@@ -27,14 +25,12 @@
         "player": "A"
     },
     {
-        "type": "EleUpd",
-        "t": 2000,
+        "type": "EleUpd","t": 2000,
         "uid": 28,
         "rad": -1.0
     },
     {
-        "type": "EleCrt",
-        "t": 3000,
+        "type": "EleCrt","t": 3000,
         "uid": 29,
         "name": "Tk",
         "x": 5.5,
@@ -42,8 +38,7 @@
         "rad": 3.14159
     },
     {
-        "type": "EleUpd",
-        "t": 4000,
+        "type": "EleUpd","t": 4000,
         "uid": 29,
         "rad": 2.14159
     }
