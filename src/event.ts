@@ -62,6 +62,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                 assertDef(param.visionRadius, `vision radius of player \"${param.player}\" is undefined`),
                 param.rad,
                 assertDef(param.money, `Initial money of player \"${param.player}\" is undefined`),
+                param.maxHp,
                 assignColor()
             );
             game.addElement(param.uid, elem);
@@ -109,11 +110,16 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             elem.y = param.y ?? elem.y;
             elem.rad = param.rad ?? elem.rad;
             elem.hp = param.hp ?? elem.hp;
-            if(param.money != undefined) {
-                const playerElem = (elem as PlayerElement);
-                playerElem.money = param.money ?? playerElem.money;
-                playerElem.visionRadius = param.visionRadius ?? playerElem.visionRadius;
-            }
+            elem.update();
+        }
+    },
+    "PlrUpd": (game, param) => {
+        const elem = game.players.get(assertDef(param.uid, "Player update event must have uid."));
+        if(elem) {
+            elem.money = param.money ?? elem.money;
+            elem.visionRadius = param.visRad ?? elem.visionRadius;
+            elem.maxHp = param.mHp ?? elem.maxHp;
+            // TODO: support other properties that is able to update
             elem.update();
             if(game.options.mode.kind == "RealTime" && game.options.mode.myUID != undefined && param.uid == game.options.mode.myUID) {
                 const mode = game.options.mode;

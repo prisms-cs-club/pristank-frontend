@@ -173,9 +173,6 @@ export function load(options: LoadOptions) {
                             backgroundColor: 0x000000
                         });
                         const mode: RealTime = { kind: "RealTime", socket, keyBinding, name };
-                        socket.onopen = _ => {
-                            socket.send(name);
-                        }
                         socket.onmessage = msg => {
                             const initEvent = JSON.parse(msg.data) as InitEvent;
                             const game = new GameDisplay(app, textures, elemData, {
@@ -183,6 +180,7 @@ export function load(options: LoadOptions) {
                                 pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, "Invalid pricing rule."),
                                 displayHP: options.displayHP
                             });
+                            socket.send(name);
                             resolve(game);
                         };
                         socket.onclose = _ => {
@@ -220,9 +218,6 @@ export function load(options: LoadOptions) {
                             backgroundColor: 0x000000
                         });
                         const mode: Observer = { kind: "Observer", socket };
-                        socket.onopen = _ => {
-                            socket.send("OBSERVER");
-                        }
                         socket.onmessage = msg => {
                             const initEvent = JSON.parse(msg.data) as InitEvent;
                             const game = new GameDisplay(app, textures, elemData, {
@@ -230,6 +225,7 @@ export function load(options: LoadOptions) {
                                 pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, "Invalid pricing rule."),
                                 displayHP: options.displayHP
                             });
+                            socket.send("OBSERVER");
                             resolve(game);
                         };
                         socket.onclose = _ => {

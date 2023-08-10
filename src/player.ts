@@ -32,6 +32,7 @@ export function assignColor() {
 export type PlayerState = {
     money: number;        // Amount of money the player currently owns.
     hp: number;
+    maxHp: number;
     visionRadius: number; // Vision radius
 };
 
@@ -42,11 +43,23 @@ export class PlayerElement extends GameElement {
     visionRadius: number;     // Vision radius
     setState?: (state: PlayerState) => void;
 
-    constructor(type: ElementData, gameIn: GameDisplay, x: number, y: number, name: string, visionRadius: number, rad?: number, money?: number, color?: PIXI.Color) {
+    constructor(
+        type: ElementData,
+        gameIn: GameDisplay,
+        x: number,
+        y: number,
+        name: string,
+        visionRadius: number,
+        rad?: number,
+        money?: number,
+        maxHp?: number,
+        color?: PIXI.Color
+    ) {
         super(type, gameIn, x, y, rad, type.width, type.height, color);
         this.name = name;
         this.money = money ?? 0;
         this.visionRadius = visionRadius;
+        this.maxHp = maxHp ?? type.hp!!;
         this.color = color ?? assignColor();
     }
 
@@ -59,6 +72,7 @@ export class PlayerElement extends GameElement {
         return {
             money: this.money,
             hp: this.hp!!,
+            maxHp: this.maxHp!!,
             visionRadius: this.visionRadius
         };
     }

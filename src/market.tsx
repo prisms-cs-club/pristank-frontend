@@ -5,8 +5,10 @@ import { EventEntry } from "./event";
 
 function timer(millis: number, callback: (secs: number) => void) {
     const lowestSecs = Math.floor(millis / 1000);
+    callback(lowestSecs + 1);
     setTimeout(() => {
         let secsCopy = lowestSecs;
+        callback(secsCopy);
         const interval = setInterval(() => {
             secsCopy -= 1;
             callback(secsCopy);
@@ -28,7 +30,7 @@ export class AuctionRule implements PricingRule {
     setSelling!: (selling: string | undefined) => void;
     setMinBid!: (minBid: number) => void;
     setDuration!: (duration: number | undefined) => void;            // This `duration` is in seconds.
-    setLastBidder!: (bidder: string | undefined) => void;
+    setLastBidder!: (bidder: number | undefined) => void;
 
     init(game: GameDisplay) {
         ReactDOM.createRoot(document.getElementById("pricing-rule")!).render(
@@ -46,20 +48,20 @@ export class AuctionRule implements PricingRule {
             }
             this.setSelling(toSellStr);
             this.setMinBid(event.minBid!!);
-            timer(event.duration, this.setDuration);
+            timer(event.endT - game.timer, this.setDuration);
         } else if(event.bidder != undefined) {
             // middle of auction
-            this.setLastBidder(game.players.get(event.bidder)!!.name);
+            this.setLastBidder(event.bidder!!);
             if(event.price != undefined) {
                 this.setMinBid(event.price);
             }
         } else {
             // end of auction
             this.setSelling(undefined);
-            this.setLastBidder(game.players.get(event.buyer!!)!!.name);
+            this.setLastBidder(event.buyer!!);
             this.setMinBid(event.price!!);
-            if(event.duration != undefined) {
-                timer(event.duration, this.setDuration);
+            if(event.nextT != undefined) {
+                timer(event.nextT - game.timer, this.setDuration);
             }
         }
     }

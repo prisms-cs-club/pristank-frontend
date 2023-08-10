@@ -41,6 +41,7 @@ export type GameOptions = {
 export class GameDisplay {
     options: GameOptions;                  // TODO: a better design
     app: PIXI.Application;
+    timer: number = 0;                     // Timer. This is set to 0 when the game starts.
     textures: Map<string, PIXI.Texture>;   // Collection of textures
     width: number;      // width in game unit (number of blocks)
     height: number;     // height in game unit (number of blocks)
@@ -75,11 +76,10 @@ export class GameDisplay {
     
         // initialize ticker
         this.app.ticker.autoStart = false;
-        let timer = 0;
         this.app.ticker.add(_ => {
             try {
-                this.updateAt(timer);
-                timer += this.app.ticker.elapsedMS;
+                this.updateAt(this.timer);
+                this.timer += this.app.ticker.elapsedMS;
             } catch(e) {
                 errorCallback?.(["An error occured.", "Press F12 and check \"console\" page for more detail."]);
             }
@@ -109,7 +109,7 @@ export class GameDisplay {
                         const action = actions.keyDown[actionStr];
                         if(action) {
                             for(const cmd of action()) {
-                                socket.send(Math.floor(timer) + " " + cmd);
+                                socket.send(Math.floor(this.timer) + " " + cmd);
                             }
                         }
                     }
@@ -121,7 +121,7 @@ export class GameDisplay {
                         const action = actions.keyUp[actionStr];
                         if(action) {
                             for(const cmd of action()) {
-                                socket.send(Math.floor(timer) + " " + cmd);
+                                socket.send(Math.floor(this.timer) + " " + cmd);
                             }
                         }
                     }

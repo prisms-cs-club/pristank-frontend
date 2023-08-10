@@ -15,7 +15,16 @@ export function PlayerPanel(props: { player: PlayerElement }) {
         <div>
             <h2 style={{color: player.current.color.toHex()}}>{player.current.name}</h2>
             <ul style={{listStyleType: "none"}}>
-                {Object.entries(state).map((value, index) => <li key={index}>{value[0]}: {value[1]}</li>)}
+                {Object.entries(state).map((value, index) => {
+                    if(value[0] != "hp" && value[0] != "maxHp") {
+                        return <li key={index}>{value[0]}: {value[1]}</li>
+                    } else if(value[0] == "hp") {
+                        // display HP and maximum HP together
+                        return <li key={index}>{value[0]}: {value[1]} / {state.maxHp}</li>
+                    } else {
+                        return null;
+                    }
+                })}
             </ul>
         </div>
     )

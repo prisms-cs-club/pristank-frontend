@@ -7,7 +7,7 @@ export default function AuctionRulePanel({rule, game}: { rule: AuctionRule, game
     const [selling, setSelling] = useState<string | undefined>();
     const [price, setPrice] = useState<number>(0);
     const [duration, setDuration] = useState<number | undefined>();
-    const [lastBidder, setLastBidder] = useState<string | undefined>();
+    const [lastBidder, setLastBidder] = useState<number | undefined>();
     useEffect(() => {
         rule.setSelling = setSelling;
         rule.setMinBid = setPrice;
@@ -22,13 +22,13 @@ export default function AuctionRulePanel({rule, game}: { rule: AuctionRule, game
                     <p>Now <strong>&quot;{selling}&quot;</strong> is in auction</p>
                     <p>Minimum price / last price: <strong>{price}</strong></p>
                     <p>The auction ends in {duration} seconds.</p>
-                    {(lastBidder != undefined)? <p>Last bidder: <strong color={game.getPlayerColor(lastBidder)}>{lastBidder}</strong></p>: null}
+                    {(lastBidder != undefined)? <p>Last bidder: <strong color={game.getPlayerColor(lastBidder)}>{game.players.get(lastBidder)!!.name}</strong></p>: null}
                 </div>
             ): (
                 <div>
                     <p>Auction finished.</p>
                     {(lastBidder != undefined)?
-                        <p>Last upgrade is bought by <strong color={game.getPlayerColor(lastBidder)}>{lastBidder}</strong> with price <strong>{price}</strong>.</p>:
+                        <p>Last upgrade is bought by <strong color={game.getPlayerColor(lastBidder)}>{game.players.get(lastBidder)!!.name}</strong> with price <strong>{price}</strong>.</p>:
                         null}
                     {(duration != undefined)? (
                         <p>Next auction will start in {duration} seconds.</p>

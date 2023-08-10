@@ -61,6 +61,7 @@ export class GameElement {
     width: number;
     height: number;
     hp?: number;
+    maxHp?: number;
     visible: boolean = true;          // whether this element is visible to the player
                                       // It should be guaranteed that if the element is invisible, it will not be displayed on the game canvas.
 
@@ -77,6 +78,7 @@ export class GameElement {
         this.rad = rad ?? 0;
         this.width = width ?? type.width;
         this.height = height ?? type.height;
+        this.maxHp = type.hp;
         this.hp = type.hp;
         this.outerContainer = new PIXI.Container();
         this.innerContainer = constructInnerContainer(type, this.width, this.height, this.gameIn, bgColor);
@@ -92,13 +94,13 @@ export class GameElement {
         this.outerContainer.y = (this.gameIn.height - this.y) * this.gameIn.unitPixel;
         this.innerContainer.rotation = -this.rad;    // Because in PIXI.js, `rotation` is the angle rotating clockwise
                                                 // and we want counterclockwise rotation
-        if(this.gameIn.options.displayHP && this.hp && this.type.hp && this.hp != this.type.hp) {
+        if(this.gameIn.options.displayHP && this.hp && this.maxHp && this.hp != this.maxHp) {
             // Add HP bar
             if(!this.hpBar) {
                 this.hpBar = new PIXI.Graphics();
                 this.outerContainer.addChild(this.hpBar);
             }
-            const hpRatio = this.hp / this.type.hp;
+            const hpRatio = this.hp / this.maxHp;
             this.hpBar.clear();
             this.hpBar.beginFill(new PIXI.Color([1 - hpRatio, hpRatio, 0]));
             let topLeftY = -this.height * this.gameIn.unitPixel * 0.8 - HP_BAR_VERTICAL_BIAS;

@@ -51,7 +51,7 @@
         "type": "MktUpd","t": 5000,
         "toSell": ["maxHP", true, 50],
         "minBid": 50,
-        "duration": 5000
+        "endT": 10000
     },
     {
         "type": "MktUpd","t": 6500,
@@ -72,12 +72,13 @@
         "type": "MktUpd","t": 10000,
         "buyer": 28,
         "price": 120,
-        "duration": 10000
+        "nextT": 20000
     },
     {
-        "type": "EleUpd", "t": 10000,
+        "type": "PlrUpd", "t": 10000,
         "uid": 28,
-        "money": 30
+        "money": 30,
+        "mHp": 200
     },
     {
         "type": "EleCrt","t": 11000,
