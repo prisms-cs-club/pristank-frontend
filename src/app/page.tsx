@@ -3,7 +3,7 @@
 import LoadingScene from '@/components/loading-scene';
 import GameScene from '@/components/game-scene';
 import { LoadOptions, LoadRealTime, LoadReplay, LoadObserver, load } from '@/boot';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { GameDisplay } from '@/game-display';
 import { Tasker } from '@/utils/tasker';
 
@@ -15,10 +15,14 @@ const mode
 //     : LoadRealTime = {
 //     kind: "RealTime",
 //     addr: "ws://localhost:1145",
-// }
+// };
 
 export default function Home() {
-    const options = new LoadOptions(mode);
+    const options: LoadOptions = {
+        mode: mode,
+        displayHP: true,
+        displayVisionCirc: true,
+    };
     const [game, setGame] = useState<GameDisplay>();
     const [tasker, _] = useState<Tasker>(load(options));
     return (

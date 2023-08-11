@@ -34,13 +34,16 @@ export type PlayerState = {
     hp: number;
     maxHp: number;
     visionRadius: number; // Vision radius
+    speed: number;
 };
 
 export class PlayerElement extends GameElement {
     name: string;             // Name of the player.
     color: PIXI.Color;        // Theme color (tank color and text color) of the player.
-    money: number;            // Amount of money the player currently owns.
-    visionRadius: number;     // Vision radius
+    money!: number;            // Amount of money the player currently owns.
+    speed!: number;
+    visionRadius!: number;     // Vision radius
+    visionCirc?: PIXI.Graphics; // A circle on the screen indicating the vision range of the player.
     setState?: (state: PlayerState) => void;
 
     constructor(
@@ -49,23 +52,30 @@ export class PlayerElement extends GameElement {
         x: number,
         y: number,
         name: string,
-        visionRadius: number,
         rad?: number,
-        money?: number,
         maxHp?: number,
         color?: PIXI.Color
     ) {
         super(type, gameIn, x, y, rad, type.width, type.height, color);
         this.name = name;
-        this.money = money ?? 0;
-        this.visionRadius = visionRadius;
         this.maxHp = maxHp ?? type.hp!!;
         this.color = color ?? assignColor();
+        this.update();
     }
 
     override update() {
         super.update();
         this.setState?.(this.getState());
+        if(this.gameIn.options.displayVisionCirc) {
+            if(this.visionCirc) {
+                this.visionCirc.clear();
+            } else {
+                this.visionCirc = new PIXI.Graphics();
+                this.outerContainer.addChild(this.visionCirc);
+            }
+            this.visionCirc.lineStyle(2, this.color, 0.5);
+            this.visionCirc.drawCircle(0, 0, this.visionRadius * this.gameIn.unitPixel);
+        }
     }
 
     getState(): PlayerState {
@@ -73,7 +83,8 @@ export class PlayerElement extends GameElement {
             money: this.money,
             hp: this.hp!!,
             maxHp: this.maxHp!!,
-            visionRadius: this.visionRadius
+            visionRadius: this.visionRadius,
+            speed: this.speed
         };
     }
 }

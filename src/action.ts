@@ -1,4 +1,6 @@
-const speed = 1.0;
+import { GameDisplay } from "./game-display";
+import { PlayerElement } from "./player";
+
 const KEY_TRACK_SPEED = [
     [ 1.0, 1.0 ],   // forward
     [ -1.0, -1.0 ], // backward
@@ -8,56 +10,56 @@ const KEY_TRACK_SPEED = [
 
 var key = [false, false, false, false];
 
-function keyToAction() {
+function keyToAction(speed: number) {
     let lTrack = 0, rTrack = 0;
     key.forEach((v, i) => {
         if(v) {
-            lTrack += KEY_TRACK_SPEED[i][0];
-            rTrack += KEY_TRACK_SPEED[i][1];
+            lTrack += KEY_TRACK_SPEED[i][0] * speed;
+            rTrack += KEY_TRACK_SPEED[i][1] * speed;
         }
     });
     return [ `lTrack ${lTrack}`, `rTrack ${rTrack}` ]
 }
 
 export const actions: {
-    keyDown: { [key: string]: () => string[] },
-    keyUp: { [key: string]: () => string[] }
+    keyDown: { [key: string]: (player: PlayerElement) => string[] },
+    keyUp: { [key: string]: (player: PlayerElement) => string[] }
 } = {
     keyDown: {
-        "forward": () => {
+        "forward": (player) => {
             key[0] = true;
-            return keyToAction();
+            return keyToAction(player.speed);
         },
-        "backward": () => {
+        "backward": (player) => {
             key[1] = true;
-            return keyToAction();
+            return keyToAction(player.speed);
         },
-        "left": () => {
+        "left": (player) => {
             key[2] = true;
-            return keyToAction();
+            return keyToAction(player.speed);
         },
-        "right": () => {
+        "right": (player) => {
             key[3] = true;
-            return keyToAction();
+            return keyToAction(player.speed);
         },
         "fire": () => [ "fire" ]
     },
     keyUp: {
-        "forward": () => {
+        "forward": (player) => {
             key[0] = false;
-            return keyToAction();
+            return keyToAction(player.speed);
         },
-        "backward": () => {
+        "backward": (player) => {
             key[1] = false;
-            return keyToAction();
+            return keyToAction(player.speed);
         },
-        "left": () => {
+        "left": (player) => {
             key[2] = false;
-            return keyToAction();
+            return keyToAction(player.speed);
         },
-        "right": () => {
+        "right": (player) => {
             key[3] = false;
-            return keyToAction();
+            return keyToAction(player.speed);
         }
     }
 };

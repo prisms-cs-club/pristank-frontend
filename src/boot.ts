@@ -27,16 +27,17 @@ export interface LoadObserver {
 
 export type LoaderMode = LoadReplay | LoadRealTime | LoadObserver;
 
-export class LoadOptions {
-    ELEMENT_DATA_LOCATION: string = "/resource/element-data.json";
-    TEXTURES_LOCATION: string = "/resource/textures.json";
-    KEY_BINDING_LOCATION: string = "/resource/key-binding.json";
+export const DEFAULT_ELEMENT_DATA_LOCATION = "/resource/element-data.json";
+export const DEFAULT_TEXTURES_LOCATION = "/resource/textures.json";
+export const DEFAULT_KEY_BINDING_LOCATION = "/resource/key-binding.json";
+
+export type LoadOptions = {
+    ELEMENT_DATA_LOCATION?: string;
+    TEXTURES_LOCATION?: string;
+    KEY_BINDING_LOCATION?: string;
     mode: LoaderMode; // game mode
     displayHP: boolean;  // Whether to display HP bar
-    constructor(mode: LoaderMode, displayHP?: boolean) {
-        this.mode = mode;
-        this.displayHP = displayHP ?? true;
-    }
+    displayVisionCirc: boolean; // Whether to display vision range
 };
 
 /**
@@ -52,7 +53,7 @@ export function load(options: LoadOptions) {
         // load element data from "/resource/element-data.json"
         prerequisite: [],
         callback: async () => {
-            const data = (await fetch(options.ELEMENT_DATA_LOCATION)).json();
+            const data = (await fetch(options.ELEMENT_DATA_LOCATION ?? DEFAULT_ELEMENT_DATA_LOCATION)).json();
             for(const [_, entry] of Object.entries(await data as { [key: string]: ElementData })) {
                 // fill out the default values
                 for(const part of entry.parts) {
@@ -72,7 +73,7 @@ export function load(options: LoadOptions) {
         prerequisite: [],
         callback: async () => {
             const textures = new Map<string, PIXI.Texture>();
-            const textureNames = (await fetch(options.TEXTURES_LOCATION)).json();
+            const textureNames = (await fetch(options.TEXTURES_LOCATION ?? DEFAULT_TEXTURES_LOCATION)).json();
             for(const [name, file] of Object.entries(await textureNames)) {
                 textures.set(name, PIXI.Texture.from(`/resource/texture/${file}`));
             }
@@ -109,13 +110,15 @@ export function load(options: LoadOptions) {
                     const app = new PIXI.Application({
                         width: window.innerWidth,
                         height: window.innerHeight,
-                        backgroundColor: 0x000000
+                        backgroundColor: 0x000000,
+                        antialias: true,
                     });
                     const mode: Replay = { kind: "Replay", events: replay };
                     const game = new GameDisplay(app, textures, elemData, {
                         mode,
                         pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, "Invalid pricing rule."),
-                        displayHP: options.displayHP
+                        displayHP: options.displayHP,
+                        displayVisionCirc: options.displayVisionCirc
                     });
                     return game;
                 }
@@ -135,7 +138,7 @@ export function load(options: LoadOptions) {
             const loadKeyBinding: Task<KeyBinding> = {
                 prerequisite: [],
                 callback: async () => {
-                    const data = (await fetch(options.KEY_BINDING_LOCATION)).json();
+                    const data = (await fetch(options.KEY_BINDING_LOCATION ?? DEFAULT_KEY_BINDING_LOCATION)).json();
                     return new Map(Object.entries(await data)) as KeyBinding;
                 }
             };
@@ -170,7 +173,8 @@ export function load(options: LoadOptions) {
                         const app = new PIXI.Application({
                             width: window.innerWidth,
                             height: window.innerHeight,
-                            backgroundColor: 0x000000
+                            backgroundColor: 0x000000,
+                            antialias: true,
                         });
                         const mode: RealTime = { kind: "RealTime", socket, keyBinding, name };
                         socket.onmessage = msg => {
@@ -178,7 +182,8 @@ export function load(options: LoadOptions) {
                             const game = new GameDisplay(app, textures, elemData, {
                                 mode,
                                 pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, "Invalid pricing rule."),
-                                displayHP: options.displayHP
+                                displayHP: options.displayHP,
+                                displayVisionCirc: options.displayVisionCirc
                             });
                             socket.send(name);
                             resolve(game);
@@ -215,7 +220,8 @@ export function load(options: LoadOptions) {
                         const app = new PIXI.Application({
                             width: window.innerWidth,
                             height: window.innerHeight,
-                            backgroundColor: 0x000000
+                            backgroundColor: 0x000000,
+                            antialias: true,
                         });
                         const mode: Observer = { kind: "Observer", socket };
                         socket.onmessage = msg => {
@@ -223,9 +229,10 @@ export function load(options: LoadOptions) {
                             const game = new GameDisplay(app, textures, elemData, {
                                 mode,
                                 pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, "Invalid pricing rule."),
-                                displayHP: options.displayHP
+                                displayHP: options.displayHP,
+                                displayVisionCirc: options.displayVisionCirc
                             });
-                            socket.send("OBSERVER");
+                            socket.send("");   // empty name to indicate observer
                             resolve(game);
                         };
                         socket.onclose = _ => {

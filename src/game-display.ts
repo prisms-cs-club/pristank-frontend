@@ -31,6 +31,7 @@ export type GameMode = Replay | RealTime | Observer;
 export type GameOptions = {
     mode: GameMode;
     displayHP: boolean;
+    displayVisionCirc: boolean;
     pricingRule: PricingRule;
 }
 
@@ -101,6 +102,7 @@ export class GameDisplay {
             }
             if(options.mode.kind == "RealTime") {
                 const binding = options.mode.keyBinding!!;
+                const player = options.mode.myPlayer!!;
                 // add event listeners to keys
                 window.addEventListener("keydown", event => {
                     const actionStr = binding.get(event.code);
@@ -108,7 +110,7 @@ export class GameDisplay {
                         //// console.log("key down: " + actionStr);
                         const action = actions.keyDown[actionStr];
                         if(action) {
-                            for(const cmd of action()) {
+                            for(const cmd of action(player)) {
                                 socket.send(Math.floor(this.timer) + " " + cmd);
                             }
                         }
@@ -120,7 +122,7 @@ export class GameDisplay {
                         //// console.log("key up: " + actionStr);
                         const action = actions.keyUp[actionStr];
                         if(action) {
-                            for(const cmd of action()) {
+                            for(const cmd of action(player)) {
                                 socket.send(Math.floor(this.timer) + " " + cmd);
                             }
                         }
