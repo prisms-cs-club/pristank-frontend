@@ -1,11 +1,11 @@
 import { useState } from "react";
 import styles from "@/app/page.module.css";
 
-export default function TextBox({ label, placeholder, onsubmit }: { label: string, placeholder: string, onsubmit: (text: string) => void }) {
+export default function TextBox({ type, label, placeholder, onsubmit }: { type: "text" | "number", label: string, placeholder: string, onsubmit: (text: string) => void }) {
     const [text, setText] = useState<string>("");
-    return <div id="text-box" className={styles["text-box"]}>
+    return <div className={styles["text-box"]}>
         <p>{label}</p>
-        <input type="text"
+        <input type={type}
             value={text}
             placeholder={placeholder}
             onChange={e => setText(e.target.value)}

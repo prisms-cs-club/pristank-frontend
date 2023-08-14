@@ -1,6 +1,6 @@
 import { GameElement } from './element';
 import { GameDisplay } from './game-display';
-import { PlayerElement, assignColor } from './player';
+import { PlayerElement, PlayerState, assignColor } from './player';
 import { assertDef } from './utils/other';
 
 export type EventBody = (game: GameDisplay, param: EventEntry) => void;
@@ -63,14 +63,12 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                 param.maxHp,
                 assignColor()
             );
-            assertDef(param.upd, "Player creation event must have `upd` field.");
-            assertDef(param.upd.money, "Player creation event does not specify the initial money.");
-            assertDef(param.upd.visRad, "Player creation event does not specify the initial vision radius.");
-            assertDef(param.upd.tkSpd, "Player creation event does not specify the initial tank speed.");
-            param.upd.uid = param.uid;
             game.addElement(param.uid, elem);
             game.players.set(param.uid, elem);
-            GAME_EVENTS.PlrUpd(game, param.upd);    // pass the `upd` parameter to player update event handler
+            if(param.plr != undefined) {
+                param.plr.uid = param.uid;
+                GAME_EVENTS.PlrUpd(game, param.plr);    // pass the `plr` parameter to player update event handler
+            }
             if(game.options.mode.kind == "RealTime" && elem.name == game.options.mode.name) {
                 game.options.mode.myUID = param.uid;
                 game.options.mode.myPlayer = elem;
@@ -153,4 +151,12 @@ export type InitEvent = {
     type: "init",
     t: number,
     pricingRule: string,
+    plr: {
+        money: number,
+        visRad: number,
+        mHP: number,
+        tkArea: number,
+        tkSpd: number,
+        // TODO: more
+    }
 };

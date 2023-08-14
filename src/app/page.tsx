@@ -8,14 +8,14 @@ import { GameDisplay } from '@/game-display';
 import { Tasker } from '@/utils/tasker';
 
 const mode
-    : LoadReplay = {
-    kind: "Replay",
-    file: "/demo/replay-demo.json",
-};
-//     : LoadRealTime = {
-//     kind: "RealTime",
-//     addr: "ws://localhost:1145",
+//     : LoadReplay = {
+//     kind: "Replay",
+//     file: "/demo/replay-demo.json",
 // };
+    : LoadRealTime = {
+    kind: "RealTime",
+    host: "localhost",
+};
 
 export default function Home() {
     const options: LoadOptions = {

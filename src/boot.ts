@@ -17,12 +17,14 @@ export interface LoadReplay {
 
 export interface LoadRealTime {
     readonly kind: "RealTime";
-    addr: string;
+    host: string;
+    port?: number;
 };
 
 export interface LoadObserver {
     readonly kind: "Observer";
-    socketAddr: string;
+    host: string,
+    port?: number,
 };
 
 export type LoaderMode = LoadReplay | LoadRealTime | LoadObserver;
@@ -81,6 +83,27 @@ export function load(options: LoadOptions) {
         }
     }
 
+    const acquirePortNum: Task<number> = {
+        prerequisite: ["acquire name"],
+        callback: (_) => {
+            return new Promise((resolve, reject) => {
+                if((options.mode.kind == "Observer" || options.mode.kind == "RealTime") && options.mode.port != undefined) {
+                    resolve(options.mode.port);
+                }
+                ReactDOM.createRoot(document.getElementById("user-interaction")!).render(
+                    createElement(TextBox,
+                        { type: "number", label: "please enter the port number: ", placeholder: "press ENTER to continue",
+                            onsubmit: (port: string) => {
+                                document.getElementById("user-interaction")!!.innerHTML = "";
+                                resolve(parseInt(port));
+                            }
+                        }
+                    )
+                );
+            });
+        }
+    };
+
     switch(options.mode.kind) {
         case "Replay": {
             const replayMode = options.mode;
@@ -116,9 +139,10 @@ export function load(options: LoadOptions) {
                     const mode: Replay = { kind: "Replay", events: replay };
                     const game = new GameDisplay(app, textures, elemData, {
                         mode,
-                        pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, "Invalid pricing rule."),
+                        pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, `Invalid pricing rule: ${initEvent.pricingRule}`),
                         displayHP: options.displayHP,
-                        displayVisionCirc: options.displayVisionCirc
+                        displayVisionCirc: options.displayVisionCirc,
+                        defaultPlayerProp: initEvent.plr
                     });
                     return game;
                 }
@@ -142,16 +166,16 @@ export function load(options: LoadOptions) {
                     return new Map(Object.entries(await data)) as KeyBinding;
                 }
             };
-            const requireName: Task<string> = {
+            const acquireName: Task<string> = {
                 prerequisite: [],
                 callback: () => {
                     return new Promise<string>((resolve, reject) => {
                         ReactDOM.createRoot(document.getElementById("user-interaction")!).render(
                             createElement(TextBox,
-                                { label: "please enter your name: ", placeholder: "press ENTER to continue",
+                                { type: "text", label: "please enter your name: ", placeholder: "press ENTER to continue",
                                     onsubmit: (name: string) => {
-                                        document.getElementById("text-box")?.remove()
-                                        resolve(name)
+                                        document.getElementById("user-interaction")!!.innerHTML = "";
+                                        resolve(name);
                                     }
                                 }
                             )
@@ -161,15 +185,17 @@ export function load(options: LoadOptions) {
             }
             const initGameDisplay: Task<GameDisplay> = {
                 // initialize the game display with the loaded data
-                prerequisite: ["load element data", "load textures", "load key bindings", "require name"],
+                prerequisite: ["load element data", "load textures", "load key bindings", "acquire name", "acquire port number"],
                 callback: (
                     elemData: Map<string, ElementData>,
                     textures: Map<string, PIXI.Texture>,
                     keyBinding: KeyBinding,
-                    name: string
+                    name: string,
+                    port: number,
                 ) => {
                     return new Promise((resolve, reject) => {
-                        const socket = new WebSocket(realTimeMode.addr);
+                        const addr = `ws://${realTimeMode.host}:${port}`;
+                        const socket = new WebSocket(addr);
                         const app = new PIXI.Application({
                             width: window.innerWidth,
                             height: window.innerHeight,
@@ -181,18 +207,19 @@ export function load(options: LoadOptions) {
                             const initEvent = JSON.parse(msg.data) as InitEvent;
                             const game = new GameDisplay(app, textures, elemData, {
                                 mode,
-                                pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, "Invalid pricing rule."),
+                                pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, `Invalid pricing rule: ${initEvent.pricingRule}`),
                                 displayHP: options.displayHP,
-                                displayVisionCirc: options.displayVisionCirc
+                                displayVisionCirc: options.displayVisionCirc,
+                                defaultPlayerProp: initEvent.plr
                             });
                             socket.send(name);
                             resolve(game);
                         };
                         socket.onclose = _ => {
-                            reject(`Cannot establish connection to ${realTimeMode.addr}`);
+                            reject(`Cannot establish connection to ${addr}`);
                         }
                         setTimeout(() => {
-                            reject(`Connection to ${realTimeMode.addr} timed out.`);
+                            reject(`Connection to ${addr} timed out.`);
                         }, 10000);
                     });
                 }
@@ -201,21 +228,24 @@ export function load(options: LoadOptions) {
                 "load element data": loadElemData,
                 "load textures": loadTextures,
                 "load key bindings": loadKeyBinding,
-                "require name": requireName,
+                "acquire name": acquireName,
+                "acquire port number": acquirePortNum,
                 "initialize game": initGameDisplay
             }, "initialize game");
         }
 
         case "Observer": {
-            const addr = options.mode.socketAddr;
+            const observerMode = options.mode;
             const initGameDisplay: Task<GameDisplay> = {
                 // initialize the game display with the loaded data
-                prerequisite: ["load element data", "load textures"],
+                prerequisite: ["load element data", "load textures", "acquire port number"],
                 callback: (
                     elemData: Map<string, ElementData>,
-                    textures: Map<string, PIXI.Texture>
+                    textures: Map<string, PIXI.Texture>,
+                    port: number,
                 ) => {
                     return new Promise((resolve, reject) => {
+                        const addr = `ws://${observerMode.host}:${port}`;
                         const socket = new WebSocket(addr);
                         const app = new PIXI.Application({
                             width: window.innerWidth,
@@ -228,9 +258,10 @@ export function load(options: LoadOptions) {
                             const initEvent = JSON.parse(msg.data) as InitEvent;
                             const game = new GameDisplay(app, textures, elemData, {
                                 mode,
-                                pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, "Invalid pricing rule."),
+                                pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, `Invalid pricing rule: ${initEvent.pricingRule}`),
                                 displayHP: options.displayHP,
-                                displayVisionCirc: options.displayVisionCirc
+                                displayVisionCirc: options.displayVisionCirc,
+                                defaultPlayerProp: initEvent.plr
                             });
                             socket.send("");   // empty name to indicate observer
                             resolve(game);
@@ -247,6 +278,7 @@ export function load(options: LoadOptions) {
             return new Tasker({
                 "load element data": loadElemData,
                 "load textures": loadTextures,
+                "acquire port number": acquirePortNum,
                 "initialize game": initGameDisplay
             }, "initialize game");
         }

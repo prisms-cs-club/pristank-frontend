@@ -25,6 +25,12 @@ export interface PricingRule {
     processEvent: (game: GameDisplay, event: EventEntry) => void;
 };
 
+export class NoneRule implements PricingRule {
+    name = "None";
+    init(game: GameDisplay) {}
+    processEvent(game: GameDisplay, event: EventEntry) {}
+}
+
 export class AuctionRule implements PricingRule {
     name = "Auction";
     setSelling!: (selling: string | undefined) => void;
@@ -68,5 +74,6 @@ export class AuctionRule implements PricingRule {
 }
 
 export const PRICING_RULES: { [key: string]: PricingRule } = {
-    auction: new AuctionRule
+    none: new NoneRule,
+    auction: new AuctionRule,
 }

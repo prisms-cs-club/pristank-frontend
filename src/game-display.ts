@@ -1,8 +1,8 @@
 import { UID } from "./utils/type";
 import { ElementData, GameElement } from "./element";
-import { EventEntry, GAME_EVENTS, GameEvent } from "./event";
+import { EventEntry, GAME_EVENTS, GameEvent, InitEvent } from "./event";
 import * as PIXI from "pixi.js";
-import { PlayerElement } from "./player";
+import { PlayerElement, PlayerState } from "./player";
 import { KeyBinding, actions } from "./action";
 import { Queue } from "@datastructures-js/queue";
 import { PricingRule } from "./market";
@@ -33,6 +33,7 @@ export type GameOptions = {
     displayHP: boolean;
     displayVisionCirc: boolean;
     pricingRule: PricingRule;
+    defaultPlayerProp: InitEvent["plr"];
 }
 
 /**
@@ -49,7 +50,7 @@ export class GameDisplay {
     unitPixel: number;  // number of pixels per game unit
     elemData: Map<string, ElementData>;   // graphics data of each element, including its width, height, hp, etc.
     elemList: Map<UID, GameElement>;      // Mapping from all element's UID to the element object.
-    eventQueue: Queue<GameEvent>; // Event queue. The event with the lowest timestamp will be processed first.
+    eventQueue: Queue<GameEvent>;         // Event queue. The event with the lowest timestamp will be processed first.
     players: Map<UID, PlayerElement>;     // Mapping from each player's UID to its element.
     setPlayers!: (players: PlayerElement[]) => void;
     errorCallback?: (messages: string[]) => void; // If this function is called, the game will terminate immediately.

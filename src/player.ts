@@ -40,9 +40,9 @@ export type PlayerState = {
 export class PlayerElement extends GameElement {
     name: string;             // Name of the player.
     color: PIXI.Color;        // Theme color (tank color and text color) of the player.
-    money!: number;            // Amount of money the player currently owns.
-    speed!: number;
-    visionRadius!: number;     // Vision radius
+    money: number;            // Amount of money the player currently owns.
+    speed: number;
+    visionRadius: number;     // Vision radius
     visionCirc?: PIXI.Graphics; // A circle on the screen indicating the vision range of the player.
     setState?: (state: PlayerState) => void;
 
@@ -58,8 +58,12 @@ export class PlayerElement extends GameElement {
     ) {
         super(type, gameIn, x, y, rad, type.width, type.height, color);
         this.name = name;
-        this.maxHp = maxHp ?? type.hp!!;
+        this.maxHp = maxHp ?? gameIn.options.defaultPlayerProp.mHP;
+        this.hp = this.maxHp;
         this.color = color ?? assignColor();
+        this.money = gameIn.options.defaultPlayerProp.money;
+        this.speed = gameIn.options.defaultPlayerProp.tkSpd;
+        this.visionRadius = gameIn.options.defaultPlayerProp.visRad;
         this.update();
     }
 

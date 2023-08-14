@@ -1,7 +1,13 @@
 [
     {
         "type": "Init","t": 0,
-        "pricingRule": "auction"
+        "pricingRule": "auction",
+        "plr": {
+            "money": 150,
+            "tkSpd": 1.0,
+            "visRad": 5,
+            "mHP": 150
+        }
     },
     {
         "type": "MapCrt","t": 0,
@@ -22,12 +28,7 @@
         "name": "Tk",
         "x": 1.5,
         "y": 1.5,
-        "player": "A",
-        "upd": {
-            "money": 150,
-            "tkSpd": 1.0,
-            "visRad": 5
-        }
+        "player": "A"
     },
     {
         "type": "EleUpd","t": 2000,
@@ -41,12 +42,7 @@
         "x": 5.5,
         "y": 4.5,
         "rad": 3.14159,
-        "player": "B",
-        "upd": {
-            "money": 150,
-            "tkSpd": 1.0,
-            "visRad": 5
-        }
+        "player": "B"
     },
     {
         "type": "EleUpd","t": 4000,
