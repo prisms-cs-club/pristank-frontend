@@ -69,10 +69,12 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                 param.plr.uid = param.uid;
                 GAME_EVENTS.PlrUpd(game, param.plr);    // pass the `plr` parameter to player update event handler
             }
-            if(game.options.mode.kind == "RealTime" && elem.name == game.options.mode.name) {
-                game.options.mode.myUID = param.uid;
-                game.options.mode.myPlayer = elem;
-                game.setPlayers([elem]);
+            if(game.options.mode.kind == "RealTime") {
+                if(elem.name == game.options.mode.name) {
+                    game.options.mode.myUID = param.uid;
+                    game.options.mode.myPlayer = elem;
+                    game.setPlayers([elem]);
+                }
             } else {
                 game.setPlayers(Array.from(game.players.values()));
             }
@@ -113,6 +115,12 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             elem.rad = param.rad ?? elem.rad;
             elem.hp = param.hp ?? elem.hp;
             elem.update();
+            if(game.options.mode.kind == "RealTime") {
+                if(game.options.mode.myPlayer != undefined && elem == game.options.mode.myPlayer) {
+                    // If the current player's status is updated, update the visibility of elements around this player.
+                    game.updateVisibility(elem as PlayerElement, game.options.mode.myPlayer.visionRadius);
+                }
+            }
         }
     },
     "PlrUpd": (game, param) => {
@@ -122,6 +130,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             elem.visionRadius = param.visRad ?? elem.visionRadius;
             elem.maxHp = param.mHp ?? elem.maxHp;
             elem.speed = param.tkSpd ?? elem.speed;
+            elem.debugStr = param.dbgStr ?? elem.debugStr;
             // TODO: support other properties that is able to update
             elem.update();
             if(game.options.mode.kind == "RealTime" && game.options.mode.myUID != undefined && param.uid == game.options.mode.myUID) {

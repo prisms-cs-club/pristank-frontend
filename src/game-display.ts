@@ -32,6 +32,7 @@ export type GameOptions = {
     mode: GameMode;
     displayHP: boolean;
     displayVisionCirc: boolean;
+    displayDebugStr: boolean;
     pricingRule: PricingRule;
     defaultPlayerProp: InitEvent["plr"];
 }
@@ -102,8 +103,8 @@ export class GameDisplay {
                 this.errorCallback?.(["WebSocket was closed before game ends."]);
             }
             if(options.mode.kind == "RealTime") {
+                const mode = options.mode;
                 const binding = options.mode.keyBinding!!;
-                const player = options.mode.myPlayer!!;
                 // add event listeners to keys
                 window.addEventListener("keydown", event => {
                     const actionStr = binding.get(event.code);
@@ -111,7 +112,7 @@ export class GameDisplay {
                         //// console.log("key down: " + actionStr);
                         const action = actions.keyDown[actionStr];
                         if(action) {
-                            for(const cmd of action(player)) {
+                            for(const cmd of action(mode.myPlayer!!)) {
                                 socket.send(Math.floor(this.timer) + " " + cmd);
                             }
                         }
@@ -123,7 +124,7 @@ export class GameDisplay {
                         //// console.log("key up: " + actionStr);
                         const action = actions.keyUp[actionStr];
                         if(action) {
-                            for(const cmd of action(player)) {
+                            for(const cmd of action(mode.myPlayer!!)) {
                                 socket.send(Math.floor(this.timer) + " " + cmd);
                             }
                         }
@@ -265,7 +266,7 @@ export class GameDisplay {
     updateVisibility(player: PlayerElement, radius: number) {
         this.elemList.forEach((elem, uid) => {
             if(!(elem instanceof PlayerElement)) {
-                if(elem.getDistanceTo(player) <= player.visionRadius) {
+                if(elem.getDistanceTo(player) <= radius) {
                     this.makeVisible(elem);
                 } else {
                     this.makeInvisible(elem);

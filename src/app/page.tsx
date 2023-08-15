@@ -17,12 +17,14 @@ const mode
     host: "localhost",
 };
 
+const options: LoadOptions = {
+    mode: mode,
+    displayHP: true,
+    displayVisionCirc: true,
+    displayDebugStr: true,
+};
+
 export default function Home() {
-    const options: LoadOptions = {
-        mode: mode,
-        displayHP: true,
-        displayVisionCirc: true,
-    };
     const [game, setGame] = useState<GameDisplay>();
     const [tasker, _] = useState<Tasker>(load(options));
     return (

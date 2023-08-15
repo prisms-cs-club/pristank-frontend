@@ -40,6 +40,7 @@ export type LoadOptions = {
     mode: LoaderMode; // game mode
     displayHP: boolean;  // Whether to display HP bar
     displayVisionCirc: boolean; // Whether to display vision range
+    displayDebugStr: boolean;   // Whether to display debug string
 };
 
 /**
@@ -51,6 +52,15 @@ export type LoadOptions = {
  * @returns The tasker that yields a GameDisplay object.
  */
 export function load(options: LoadOptions) {
+    let userInteractionNode: ReactDOM.Root | undefined = undefined;
+
+    function getOrCreateUserInteraction(): ReactDOM.Root {
+        if(userInteractionNode == undefined) {
+            userInteractionNode = ReactDOM.createRoot(document.getElementById("user-interaction")!);
+        }
+        return userInteractionNode!!;
+    }
+    
     const loadElemData: Task<Map<string, ElementData>> = {
         // load element data from "/resource/element-data.json"
         prerequisite: [],
@@ -90,11 +100,11 @@ export function load(options: LoadOptions) {
                 if((options.mode.kind == "Observer" || options.mode.kind == "RealTime") && options.mode.port != undefined) {
                     resolve(options.mode.port);
                 }
-                ReactDOM.createRoot(document.getElementById("user-interaction")!).render(
+                getOrCreateUserInteraction().render(
                     createElement(TextBox,
                         { type: "number", label: "please enter the port number: ", placeholder: "press ENTER to continue",
                             onsubmit: (port: string) => {
-                                document.getElementById("user-interaction")!!.innerHTML = "";
+                                getOrCreateUserInteraction().render(null);
                                 resolve(parseInt(port));
                             }
                         }
@@ -142,6 +152,7 @@ export function load(options: LoadOptions) {
                         pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, `Invalid pricing rule: ${initEvent.pricingRule}`),
                         displayHP: options.displayHP,
                         displayVisionCirc: options.displayVisionCirc,
+                        displayDebugStr: options.displayDebugStr,
                         defaultPlayerProp: initEvent.plr
                     });
                     return game;
@@ -170,11 +181,11 @@ export function load(options: LoadOptions) {
                 prerequisite: [],
                 callback: () => {
                     return new Promise<string>((resolve, reject) => {
-                        ReactDOM.createRoot(document.getElementById("user-interaction")!).render(
+                        getOrCreateUserInteraction().render(
                             createElement(TextBox,
                                 { type: "text", label: "please enter your name: ", placeholder: "press ENTER to continue",
                                     onsubmit: (name: string) => {
-                                        document.getElementById("user-interaction")!!.innerHTML = "";
+                                        getOrCreateUserInteraction().render(null);
                                         resolve(name);
                                     }
                                 }
@@ -210,6 +221,7 @@ export function load(options: LoadOptions) {
                                 pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, `Invalid pricing rule: ${initEvent.pricingRule}`),
                                 displayHP: options.displayHP,
                                 displayVisionCirc: options.displayVisionCirc,
+                                displayDebugStr: options.displayDebugStr,
                                 defaultPlayerProp: initEvent.plr
                             });
                             socket.send(name);
@@ -261,6 +273,7 @@ export function load(options: LoadOptions) {
                                 pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, `Invalid pricing rule: ${initEvent.pricingRule}`),
                                 displayHP: options.displayHP,
                                 displayVisionCirc: options.displayVisionCirc,
+                                displayDebugStr: options.displayDebugStr,
                                 defaultPlayerProp: initEvent.plr
                             });
                             socket.send("");   // empty name to indicate observer

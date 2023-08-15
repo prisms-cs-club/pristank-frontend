@@ -80,7 +80,8 @@
         "type": "PlrUpd", "t": 10000,
         "uid": 28,
         "money": 30,
-        "mHp": 200
+        "mHp": 200,
+        "dbgStr": "hahahaha, I'm rich!"
     },
     {
         "type": "EleCrt","t": 11000,

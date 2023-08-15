@@ -63,3 +63,7 @@
   margin: 10px 0;
   border: 2px solid #909090;
 }
+
+.debug-string {
+  color: gray;
+}

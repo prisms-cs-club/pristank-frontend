@@ -35,6 +35,7 @@ export type PlayerState = {
     maxHp: number;
     visionRadius: number; // Vision radius
     speed: number;
+    debugString: string;  // A string that will be displayed on the screen. Reserved for debugging.
 };
 
 export class PlayerElement extends GameElement {
@@ -44,6 +45,7 @@ export class PlayerElement extends GameElement {
     speed: number;
     visionRadius: number;     // Vision radius
     visionCirc?: PIXI.Graphics; // A circle on the screen indicating the vision range of the player.
+    debugStr: string;
     setState?: (state: PlayerState) => void;
 
     constructor(
@@ -64,6 +66,7 @@ export class PlayerElement extends GameElement {
         this.money = gameIn.options.defaultPlayerProp.money;
         this.speed = gameIn.options.defaultPlayerProp.tkSpd;
         this.visionRadius = gameIn.options.defaultPlayerProp.visRad;
+        this.debugStr = "";
         this.update();
     }
 
@@ -88,7 +91,8 @@ export class PlayerElement extends GameElement {
             hp: this.hp!!,
             maxHp: this.maxHp!!,
             visionRadius: this.visionRadius,
-            speed: this.speed
+            speed: this.speed,
+            debugString: this.debugStr,
         };
     }
 }
