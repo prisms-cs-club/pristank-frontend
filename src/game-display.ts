@@ -1,18 +1,18 @@
 import { UID } from "./utils/type";
 import { ElementData, GameElement } from "./element";
-import { EventEntry, GAME_EVENTS, GameEvent, InitEvent } from "./event";
+import { EndEvent, EventEntry, GAME_EVENTS, GameEvent, InitEvent } from "./event";
 import * as PIXI from "pixi.js";
 import { PlayerElement, PlayerState } from "./player";
-import { KeyBinding, actions } from "./action";
+import { KeyBinding, actions, keyDownEvent, keyUpEvent } from "./action";
 import { Queue } from "@datastructures-js/queue";
 import { PricingRule } from "./market";
 
-export interface Replay {
+export interface ReplayMode {
     readonly kind: "Replay";
     events: GameEvent[];
 }
 
-export interface RealTime {
+export interface PlayerMode {
     readonly kind: "RealTime";
     socket: WebSocket;
     keyBinding: KeyBinding;
@@ -21,12 +21,12 @@ export interface RealTime {
     myPlayer?: PlayerElement;       // The tank controlled by the player
 }
 
-export interface Observer {
+export interface ObserverMode {
     readonly kind: "Observer";
     socket: WebSocket;
 }
 
-export type GameMode = Replay | RealTime | Observer;
+export type GameMode = ReplayMode | PlayerMode | ObserverMode;
 
 export type GameOptions = {
     mode: GameMode;
@@ -54,6 +54,7 @@ export class GameDisplay {
     eventQueue: Queue<GameEvent>;         // Event queue. The event with the lowest timestamp will be processed first.
     players: Map<UID, PlayerElement>;     // Mapping from each player's UID to its element.
     setPlayers!: (players: PlayerElement[]) => void;
+    gameEndCallback!: (event: EndEvent) => void;
     errorCallback?: (messages: string[]) => void; // If this function is called, the game will terminate immediately.
 
     constructor(
@@ -106,30 +107,8 @@ export class GameDisplay {
                 const mode = options.mode;
                 const binding = options.mode.keyBinding!!;
                 // add event listeners to keys
-                window.addEventListener("keydown", event => {
-                    const actionStr = binding.get(event.code);
-                    if(actionStr) {
-                        //// console.log("key down: " + actionStr);
-                        const action = actions.keyDown[actionStr];
-                        if(action) {
-                            for(const cmd of action(mode.myPlayer!!)) {
-                                socket.send(Math.floor(this.timer) + " " + cmd);
-                            }
-                        }
-                    }
-                });
-                window.addEventListener("keyup", event => {
-                    const actionStr = binding.get(event.code);
-                    if(actionStr) {
-                        //// console.log("key up: " + actionStr);
-                        const action = actions.keyUp[actionStr];
-                        if(action) {
-                            for(const cmd of action(mode.myPlayer!!)) {
-                                socket.send(Math.floor(this.timer) + " " + cmd);
-                            }
-                        }
-                    }
-                });
+                window.addEventListener("keydown", keyDownEvent(this, mode, binding));
+                window.addEventListener("keyup", keyUpEvent(this, mode, binding));
             }
         }
     }
@@ -219,6 +198,15 @@ export class GameDisplay {
      */
     getElement(uid: UID) {
         return this.elemList.get(uid);
+    }
+
+    /**
+     * Get a reference to the player whose tank has the given UID.
+     * @param uid Unique identifier of the tank controlled by the player
+     * @returns Player
+     */
+    getPlayer(uid: UID) {
+        return this.players.get(uid);
     }
 
     /**

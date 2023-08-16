@@ -30,6 +30,8 @@ GameEvent.prototype.valueOf = function() {
  */
 export const GAME_EVENTS: { [key: string]: EventBody } = {
     "MapCrt": (game, param) => {
+        // Map Creation event
+        // This is triggered when the map is created. Usually it is triggered only at the beginning of the game.
         game.width = param.x ?? game.width;
         game.height = param.y ?? game.height;
         game.unitPixel = Math.min(game.app.renderer.width / game.width, game.app.renderer.height / game.height);
@@ -53,6 +55,8 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         }
     },
     "EleCrt": (game, param) => {
+        // Element Creation event
+        // This is triggered when a new element is added to the screen.
         const type = assertDef(game.elemData.get(param.name), `Invalid element type: ${param.name}`);
         if(param.name == "Tk") {
             // special case of Tank
@@ -89,9 +93,11 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         }
     },
     "EleRmv": (game, param) => {
+        // Element Removal event
+        // This is triggered when an element is removed from the screen.
         const elem = game.removeElement(assertDef(param.uid, "Element remove event must have uid."));
         if(elem instanceof PlayerElement) {
-            game.players.delete(param.uid);
+            game.getPlayer(param.uid)!!.alive = false;  // Set the `alive` of this player to false
             if(game.options.mode.kind == "RealTime") {
                 if(param.uid == game.options.mode.myUID) {
                     // If this player dies, output an error message and set all element to visible.
@@ -108,6 +114,8 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         }
     },
     "EleUpd": (game, param) => {
+        // Element Update event
+        // This is triggered when a property of an element (position, rotation, hp, etc.) is updated.
         const elem = game.getElement(assertDef(param.uid, "Element update event must have uid."));
         if(elem) {
             elem.x = param.x ?? elem.x;
@@ -124,12 +132,14 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         }
     },
     "PlrUpd": (game, param) => {
+        // Player Update event
+        // This is triggered when a property uniquely related to a player (money, vision radius, etc.) is updated.
         const elem = game.players.get(assertDef(param.uid, "Player update event must have uid."));
         if(elem) {
             elem.money = param.money ?? elem.money;
             elem.visionRadius = param.visRad ?? elem.visionRadius;
             elem.maxHp = param.mHp ?? elem.maxHp;
-            elem.speed = param.tkSpd ?? elem.speed;
+            elem.tankSpeed = param.tkSpd ?? elem.tankSpeed;
             elem.debugStr = param.dbgStr ?? elem.debugStr;
             // TODO: support other properties that is able to update
             elem.update();
@@ -142,8 +152,16 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         }
     },
     "MktUpd": (game, param) => {
+        // Market Update event
+        // This is triggered when the market is updated.
+        // The specific behavior of this event depends on the pricing rule.
         game.options.pricingRule.processEvent(game, param);
     },
+    "End": (game, param) => {
+        // Game End event
+        // This is triggerd when the game ends.
+        game.gameEndCallback(param as EndEvent);
+    }
 };
 
 
@@ -157,7 +175,7 @@ export type EventEntry = { type: string, t: number, [key: string]: any };
  * Since `InitEvent` is special, it is dealt before the game is created.
  */
 export type InitEvent = {
-    type: "init",
+    type: "Init",
     t: number,
     pricingRule: string,
     plr: {
@@ -168,4 +186,13 @@ export type InitEvent = {
         tkSpd: number,
         // TODO: more
     }
+};
+
+/**
+ * Format of the ending event.
+ */
+export type EndEvent = {
+    type: "End",
+    t: number,
+    rank: number[],
 };

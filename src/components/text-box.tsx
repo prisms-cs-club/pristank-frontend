@@ -1,17 +1,24 @@
 import { useState } from "react";
 import styles from "@/app/page.module.css";
 
-export default function TextBox({ type, label, placeholder, onsubmit }: { type: "text" | "number", label: string, placeholder: string, onsubmit: (text: string) => void }) {
+type TextBoxParams = {
+    type: "text" | "number",
+    label?: string,
+    placeholder: string,
+    onSubmit: (text: string) => void,
+};
+
+export default function TextBox({ type, label, placeholder, onSubmit }: TextBoxParams) {
     const [text, setText] = useState<string>("");
     return <div className={styles["text-box"]}>
-        <p>{label}</p>
+        {(label != undefined)? <p>{label}</p>: null}
         <input type={type}
             value={text}
             placeholder={placeholder}
             onChange={e => setText(e.target.value)}
             onKeyDown={e => {
                 if(e.key == "Enter") {
-                    onsubmit(text);
+                    onSubmit(text);
                     setText("");
                 }
             }} />

@@ -1,4 +1,5 @@
 import { ElementData, constructInnerContainer } from "./element";
+import { EventEntry } from "./event";
 import { Task, Tasker } from "./utils/tasker";
 import * as PIXI from "pixi.js";
 
@@ -81,6 +82,11 @@ export class MapEditor {
         this.resize();
     }
 
+    /**
+     * Resize the canvas to let it fit in the window. At the same time:
+     * - update `unitPixel`.
+     * - clear the canvas and redraw the solid blocks on the boundary of the map.
+     */
     private resize() {
         this.unitPixel = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
         this.app.renderer.resize(this.unitPixel * this.width, this.unitPixel * this.height);
@@ -161,7 +167,11 @@ export class MapEditor {
         }
     }
 
-    getMapCrtEvent(): { [key: string]: any } {
+    /**
+     * Convert the blocks on the canvas into format of the "map creation" event.
+     * @returns The event in JSON.
+     */
+    getMapCrtEvent(): EventEntry {
         const mapFlatten: string[] = [];
         for(const row of this.blocks) {
             for(const name of row) {

@@ -67,3 +67,7 @@
 .debug-string {
   color: gray;
 }
+
+.centering {
+  margin: 0 auto;
+}

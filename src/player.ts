@@ -3,6 +3,10 @@ import { ElementData, GameElement } from "./element";
 import { HSVtoRGB } from "./utils/color";
 import { GameDisplay } from "./game-display";
 
+/**
+ * This list stores the first few colors that will be assigned to players.
+ * If there are more players than the colors in the list, the game will generate random colors for the remaining players.
+ */
 export const PLAYER_COLOR_LIST = [
     new PIXI.Color("#114514"),
     new PIXI.Color("#191981"),
@@ -11,6 +15,10 @@ export const PLAYER_COLOR_LIST = [
 
 var globl_player_color_index = 0;
 
+/**
+ * Generate a random color for the player.
+ * @returns A random color.
+ */
 export function assignColor() {
     let color: PIXI.Color;
     if(globl_player_color_index < PLAYER_COLOR_LIST.length) {
@@ -30,6 +38,7 @@ export function assignColor() {
  * Player state. This is the state of the player that will be displayed on the left side of the screen.
  */
 export type PlayerState = {
+    alive: boolean;
     money: number;        // Amount of money the player currently owns.
     hp: number;
     maxHp: number;
@@ -39,11 +48,12 @@ export type PlayerState = {
 };
 
 export class PlayerElement extends GameElement {
-    name: string;             // Name of the player.
-    color: PIXI.Color;        // Theme color (tank color and text color) of the player.
-    money: number;            // Amount of money the player currently owns.
-    speed: number;
-    visionRadius: number;     // Vision radius
+    alive: boolean = true;      // When the player is dead, this field is set to false.
+    name: string;               // Name of the player.
+    color: PIXI.Color;          // Theme color (tank color and text color) of the player.
+    money: number;              // Amount of money the player currently owns.
+    tankSpeed: number;          // Maximum speed of the tank's left and right track.
+    visionRadius: number;       // Vision radius
     visionCirc?: PIXI.Graphics; // A circle on the screen indicating the vision range of the player.
     debugStr: string;
     setState?: (state: PlayerState) => void;
@@ -64,7 +74,7 @@ export class PlayerElement extends GameElement {
         this.hp = this.maxHp;
         this.color = color ?? assignColor();
         this.money = gameIn.options.defaultPlayerProp.money;
-        this.speed = gameIn.options.defaultPlayerProp.tkSpd;
+        this.tankSpeed = gameIn.options.defaultPlayerProp.tkSpd;
         this.visionRadius = gameIn.options.defaultPlayerProp.visRad;
         this.debugStr = "";
         this.update();
@@ -87,11 +97,12 @@ export class PlayerElement extends GameElement {
 
     getState(): PlayerState {
         return {
+            alive: this.alive,
             money: this.money,
             hp: this.hp!!,
             maxHp: this.maxHp!!,
             visionRadius: this.visionRadius,
-            speed: this.speed,
+            speed: this.tankSpeed,
             debugString: this.debugStr,
         };
     }

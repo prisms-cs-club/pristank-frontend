@@ -3,7 +3,7 @@ import { KeyBinding } from "./action";
 import TextBox from "@/components/text-box";
 import { ElementData, ElementModelPart } from "./element";
 import { EventEntry, GAME_EVENTS, GameEvent, InitEvent } from "./event";
-import { GameDisplay, GameMode, Observer, RealTime, Replay } from "./game-display";
+import { GameDisplay, GameMode, ObserverMode, PlayerMode, ReplayMode } from "./game-display";
 import { Task, Tasker } from "./utils/tasker";
 import * as PIXI from "pixi.js";
 import ReactDOM from "react-dom/client";
@@ -21,13 +21,7 @@ export interface LoadRealTime {
     port?: number;
 };
 
-export interface LoadObserver {
-    readonly kind: "Observer";
-    host: string,
-    port?: number,
-};
-
-export type LoaderMode = LoadReplay | LoadRealTime | LoadObserver;
+export type LoaderMode = LoadReplay | LoadRealTime;
 
 export const DEFAULT_ELEMENT_DATA_LOCATION = "/resource/element-data.json";
 export const DEFAULT_TEXTURES_LOCATION = "/resource/textures.json";
@@ -37,7 +31,9 @@ export type LoadOptions = {
     ELEMENT_DATA_LOCATION?: string;
     TEXTURES_LOCATION?: string;
     KEY_BINDING_LOCATION?: string;
-    mode: LoaderMode; // game mode
+    socketTimeout: number;  // Timeout of the web socket (in miliseconds).
+                            // If the connection to server is not established within the timeout, it will throw an error.
+    mode: LoaderMode;    // game mode
     displayHP: boolean;  // Whether to display HP bar
     displayVisionCirc: boolean; // Whether to display vision range
     displayDebugStr: boolean;   // Whether to display debug string
@@ -94,16 +90,19 @@ export function load(options: LoadOptions) {
     }
 
     const acquirePortNum: Task<number> = {
+        // acquire port number from user
         prerequisite: ["acquire name"],
         callback: (_) => {
             return new Promise((resolve, reject) => {
-                if((options.mode.kind == "Observer" || options.mode.kind == "RealTime") && options.mode.port != undefined) {
+                if(options.mode.kind == "RealTime" && options.mode.port != undefined) {
+                    // if the port number is already given, directly return it
                     resolve(options.mode.port);
                 }
+                // otherwise, render a text box to ask the user for the port number
                 getOrCreateUserInteraction().render(
                     createElement(TextBox,
                         { type: "number", label: "please enter the port number: ", placeholder: "press ENTER to continue",
-                            onsubmit: (port: string) => {
+                            onSubmit: (port: string) => {
                                 getOrCreateUserInteraction().render(null);
                                 resolve(parseInt(port));
                             }
@@ -146,7 +145,7 @@ export function load(options: LoadOptions) {
                         backgroundColor: 0x000000,
                         antialias: true,
                     });
-                    const mode: Replay = { kind: "Replay", events: replay };
+                    const mode: ReplayMode = { kind: "Replay", events: replay };
                     const game = new GameDisplay(app, textures, elemData, {
                         mode,
                         pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, `Invalid pricing rule: ${initEvent.pricingRule}`),
@@ -171,6 +170,7 @@ export function load(options: LoadOptions) {
             /*** Real-Time Playing Mode ****/
             const realTimeMode = options.mode;
             const loadKeyBinding: Task<KeyBinding> = {
+                // load key binding from file
                 prerequisite: [],
                 callback: async () => {
                     const data = (await fetch(options.KEY_BINDING_LOCATION ?? DEFAULT_KEY_BINDING_LOCATION)).json();
@@ -178,15 +178,19 @@ export function load(options: LoadOptions) {
                 }
             };
             const acquireName: Task<string> = {
+                // acquire name from user
                 prerequisite: [],
                 callback: () => {
                     return new Promise<string>((resolve, reject) => {
                         getOrCreateUserInteraction().render(
                             createElement(TextBox,
-                                { type: "text", label: "please enter your name: ", placeholder: "press ENTER to continue",
-                                    onsubmit: (name: string) => {
+                                {
+                                    type: "text",
+                                    label: "Your name here:",
+                                    placeholder: "press ENTER to continue.",
+                                    onSubmit: (text: string) => {
                                         getOrCreateUserInteraction().render(null);
-                                        resolve(name);
+                                        resolve(text);
                                     }
                                 }
                             )
@@ -213,7 +217,9 @@ export function load(options: LoadOptions) {
                             backgroundColor: 0x000000,
                             antialias: true,
                         });
-                        const mode: RealTime = { kind: "RealTime", socket, keyBinding, name };
+                        const mode: PlayerMode | ObserverMode = (name != "") ?
+                            { kind: "RealTime", socket, keyBinding, name } :
+                            { kind: "Observer", socket };
                         socket.onmessage = msg => {
                             const initEvent = JSON.parse(msg.data) as InitEvent;
                             const game = new GameDisplay(app, textures, elemData, {
@@ -227,12 +233,12 @@ export function load(options: LoadOptions) {
                             socket.send(name);
                             resolve(game);
                         };
-                        socket.onclose = _ => {
-                            reject(`Cannot establish connection to ${addr}`);
+                        socket.onclose = event => {
+                            reject(`Cannot establish connection to ${addr}: ${event.reason}`);
                         }
                         setTimeout(() => {
                             reject(`Connection to ${addr} timed out.`);
-                        }, 10000);
+                        }, options.socketTimeout);
                     });
                 }
             }
@@ -241,56 +247,6 @@ export function load(options: LoadOptions) {
                 "load textures": loadTextures,
                 "load key bindings": loadKeyBinding,
                 "acquire name": acquireName,
-                "acquire port number": acquirePortNum,
-                "initialize game": initGameDisplay
-            }, "initialize game");
-        }
-
-        case "Observer": {
-            const observerMode = options.mode;
-            const initGameDisplay: Task<GameDisplay> = {
-                // initialize the game display with the loaded data
-                prerequisite: ["load element data", "load textures", "acquire port number"],
-                callback: (
-                    elemData: Map<string, ElementData>,
-                    textures: Map<string, PIXI.Texture>,
-                    port: number,
-                ) => {
-                    return new Promise((resolve, reject) => {
-                        const addr = `ws://${observerMode.host}:${port}`;
-                        const socket = new WebSocket(addr);
-                        const app = new PIXI.Application({
-                            width: window.innerWidth,
-                            height: window.innerHeight,
-                            backgroundColor: 0x000000,
-                            antialias: true,
-                        });
-                        const mode: Observer = { kind: "Observer", socket };
-                        socket.onmessage = msg => {
-                            const initEvent = JSON.parse(msg.data) as InitEvent;
-                            const game = new GameDisplay(app, textures, elemData, {
-                                mode,
-                                pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, `Invalid pricing rule: ${initEvent.pricingRule}`),
-                                displayHP: options.displayHP,
-                                displayVisionCirc: options.displayVisionCirc,
-                                displayDebugStr: options.displayDebugStr,
-                                defaultPlayerProp: initEvent.plr
-                            });
-                            socket.send("");   // empty name to indicate observer
-                            resolve(game);
-                        };
-                        socket.onclose = _ => {
-                            reject(`Cannot establish connection to ${addr}`);
-                        }
-                        setTimeout(() => {
-                            reject(`Connection to ${addr} timed out.`);
-                        }, 10000);
-                    });
-                }
-            }
-            return new Tasker({
-                "load element data": loadElemData,
-                "load textures": loadTextures,
                 "acquire port number": acquirePortNum,
                 "initialize game": initGameDisplay
             }, "initialize game");

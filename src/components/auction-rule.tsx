@@ -22,14 +22,13 @@ export default function AuctionRulePanel({rule, game}: { rule: AuctionRule, game
                     <p>Now <strong>&quot;{selling}&quot;</strong> is in auction</p>
                     <p>Minimum price / last price: <strong>{price}</strong></p>
                     <p>The auction ends in {duration} seconds.</p>
-                    {(lastBidder != undefined)? <p>Last bidder: <strong color={game.getPlayerColor(lastBidder)}>{game.players.get(lastBidder)?.name ?? "_____"}</strong></p>: null}
+                    {lastBidder && <p>Last bidder: <strong color={game.getPlayerColor(lastBidder)}>{game.getPlayer(lastBidder)?.name ?? "_____"}</strong></p>}
                 </div>
             ): (
                 <div>
                     <p>Auction finished.</p>
-                    {(lastBidder != undefined)?
-                        <p>Last upgrade is bought by <strong color={game.getPlayerColor(lastBidder)}>{game.players.get(lastBidder)?.name ?? "_____"}</strong> with price <strong>{price}</strong>.</p>:
-                        null}
+                    {lastBidder &&
+                        <p>Last upgrade is bought by <strong color={game.getPlayerColor(lastBidder)}>{game.getPlayer(lastBidder)?.name ?? "_____"}</strong> with price <strong>{price}</strong>.</p>}
                     {(duration != undefined)? (
                         <p>Next auction will start in {duration} seconds.</p>
                     ): (
