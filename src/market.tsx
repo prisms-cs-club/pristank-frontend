@@ -39,7 +39,8 @@ export class AuctionRule implements PricingRule {
     setLastBidder!: (bidder: number | undefined) => void;
 
     init(game: GameDisplay) {
-        ReactDOM.createRoot(document.getElementById("pricing-rule")!).render(
+        const root = ReactDOM.createRoot(document.getElementById("pricing-rule")!);
+        root.render(
             <AuctionRulePanel rule={this} game={game}></AuctionRulePanel>
         );
     }
@@ -69,6 +70,17 @@ export class AuctionRule implements PricingRule {
             if(event.nextT != undefined) {
                 timer(event.nextT - game.timer, this.setDuration);
             }
+        }
+    }
+
+    /**
+     * Handle bidding request from user.
+     * @param game The game
+     * @param amount The amount of money to bid
+     */
+    bid(game: GameDisplay, amount: number) {
+        if(game.options.mode.kind == "RealTime") {
+            game.options.mode.socket.send(`${game.timer} market.bid ${amount}`)
         }
     }
 }

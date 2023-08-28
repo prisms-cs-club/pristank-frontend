@@ -78,6 +78,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                     game.options.mode.myUID = param.uid;
                     game.options.mode.myPlayer = elem;
                     game.setPlayers([elem]);
+                    game.updateVisibility(elem, elem.visionRadius);
                 }
             } else {
                 game.setPlayers(Array.from(game.players.values()));
@@ -123,10 +124,17 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             elem.rad = param.rad ?? elem.rad;
             elem.hp = param.hp ?? elem.hp;
             elem.update();
-            if(game.options.mode.kind == "RealTime") {
-                if(game.options.mode.myPlayer != undefined && elem == game.options.mode.myPlayer) {
-                    // If the current player's status is updated, update the visibility of elements around this player.
+            if(game.options.mode.kind == "RealTime" && game.options.mode.myPlayer != undefined) {
+                const player = game.options.mode.myPlayer;
+                // If the current player's status is updated, update the visibility of elements around this player.
+                if(elem == player) {
                     game.updateVisibility(elem as PlayerElement, game.options.mode.myPlayer.visionRadius);
+                } else if(!(elem instanceof PlayerElement)) {
+                    if(elem.getDistanceTo(player) <= game.options.mode.myPlayer.visionRadius) {
+                        game.makeVisible(elem);
+                    } else {
+                        game.makeInvisible(elem);
+                    }
                 }
             }
         }
@@ -194,5 +202,6 @@ export type InitEvent = {
 export type EndEvent = {
     type: "End",
     t: number,
-    rank: number[],
+    uids: number[],
+    rank?: number[],
 };

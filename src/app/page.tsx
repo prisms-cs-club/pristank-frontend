@@ -8,14 +8,14 @@ import { GameDisplay } from '@/game-display';
 import { Tasker } from '@/utils/tasker';
 
 const mode
-    : LoadReplay = {
-    kind: "Replay",
-    file: "/demo/replay-demo.json",
-};
-//     : LoadRealTime = {
-//     kind: "RealTime",
-//     host: "localhost",
+//     : LoadReplay = {
+//     kind: "Replay",
+//     file: "/demo/replay-demo.json",
 // };
+    : LoadRealTime = {
+    kind: "RealTime",
+    host: "localhost",
+};
 
 const options: LoadOptions = {
     socketTimeout: 10000, // (miliseconds)

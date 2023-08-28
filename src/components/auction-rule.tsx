@@ -8,6 +8,7 @@ export default function AuctionRulePanel({rule, game}: { rule: AuctionRule, game
     const [price, setPrice] = useState<number>(0);
     const [duration, setDuration] = useState<number | undefined>();
     const [lastBidder, setLastBidder] = useState<number | undefined>();
+    const [bid, setBid] = useState<number>(price);                // Only for real-time mode where user can bid
     useEffect(() => {
         rule.setSelling = setSelling;
         rule.setMinBid = setPrice;
@@ -15,7 +16,7 @@ export default function AuctionRulePanel({rule, game}: { rule: AuctionRule, game
         rule.setLastBidder = setLastBidder;
         // TODO: text color of player name
     }, [rule]);
-    return (
+    const auctionRule =  (
         <div>
             {(selling != undefined)? (
                 <div>
@@ -36,6 +37,30 @@ export default function AuctionRulePanel({rule, game}: { rule: AuctionRule, game
                     )}
                 </div>
             )}
+        </div>
+    );
+    if(game.options.mode.kind != "RealTime") {
+        return auctionRule;
+    }
+    return (
+        <div>
+            {auctionRule}
+            {selling != undefined && (<div>
+                <label>{price}</label>
+                <input type="range"
+                    min={price}
+                    max={game.options.mode.myPlayer!!.money}
+                    value={bid}
+                    onChange={e => setBid(parseInt(e.target.value))}
+                    disabled={game.options.mode.myPlayer!!.money < price}/>
+                <label>{game.options.mode.myPlayer!!.money}</label>
+                <br/>
+                <label>Your bid: {bid}</label>
+                <button onClick={() => {
+                    console.log(bid)
+                    rule.bid(game, bid);
+                }}>Bid</button>
+            </div> )}
         </div>
     )
 }
