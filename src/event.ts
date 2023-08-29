@@ -146,7 +146,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         if(elem) {
             elem.money = param.money ?? elem.money;
             elem.visionRadius = param.visRad ?? elem.visionRadius;
-            elem.maxHp = param.mHp ?? elem.maxHp;
+            elem.maxHp = param.mHP ?? elem.maxHp;
             elem.tankSpeed = param.tkSpd ?? elem.tankSpeed;
             elem.debugStr = param.dbgStr ?? elem.debugStr;
             // TODO: support other properties that is able to update

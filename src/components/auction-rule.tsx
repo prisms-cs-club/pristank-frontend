@@ -1,7 +1,7 @@
 import styles from "@/app/page.module.css";
 import { AuctionRule } from "@/market";
 import { useEffect, useRef, useState } from "react";
-import { GameDisplay } from "@/game-display";
+import { GameDisplay, PlayerMode } from "@/game-display";
 
 export default function AuctionRulePanel({rule, game}: { rule: AuctionRule, game: GameDisplay }) {
     const [selling, setSelling] = useState<string | undefined>();
@@ -46,20 +46,26 @@ export default function AuctionRulePanel({rule, game}: { rule: AuctionRule, game
         <div>
             {auctionRule}
             {selling != undefined && (<div>
-                <label>{price}</label>
+                <label>{price + 1}</label>
                 <input type="range"
-                    min={price}
+                    min={price + 1}
                     max={game.options.mode.myPlayer!!.money}
                     value={bid}
                     onChange={e => setBid(parseInt(e.target.value))}
-                    disabled={game.options.mode.myPlayer!!.money < price}/>
+                    disabled={game.options.mode.myPlayer!!.money < price} />
                 <label>{game.options.mode.myPlayer!!.money}</label>
                 <br/>
-                <label>Your bid: {bid}</label>
-                <button onClick={() => {
-                    console.log(bid)
-                    rule.bid(game, bid);
-                }}>Bid</button>
+                <label>Your bid: </label>
+                <input type="number" style={{width: "auto"}}
+                    min={price + 1}
+                    max={game.options.mode.myPlayer!!.money}
+                    value={bid}
+                    onChange={e => setBid(parseInt(e.target.value))}
+                    onKeyDown={e => {  // handle enter key
+                        if(e.key == "Enter") { rule.bid(game, bid) }
+                    }}
+                    disabled={game.options.mode.myPlayer!!.money < price} />
+                <button onClick={() => rule.bid(game, bid)}>Bid</button>
             </div> )}
         </div>
     )
