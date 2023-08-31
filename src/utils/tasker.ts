@@ -4,7 +4,7 @@ export type Task<R> = {
 }
 
 /**
- * A simple tasker that can execute tasks and handle prerequisites.
+ * A simple tasker that can execute tasks and handle task dependencies.
  * 
  * One entry task is specified, and the loader will return the result of entry task when all required
  * tasks finished loading.
@@ -12,15 +12,12 @@ export type Task<R> = {
  * The tasker itself cannot detect circular dependencies, so the user should check for dependency issues
  * before calling the tasker.
  * 
- * The tasker also does not strictly check for types.
- * @param tasks List of all tasks with their name.
- * @param entry The entry task to start with.
- * @returns The result of entry task.
+ * The tasker also does not strictly check for types. The user should check for type issues before calling
  */
 export class Tasker {
-    tasks: { [key: string]: Task<any> };
-    entry: string;
-    results: { [key: string]: Promise<any>} = {};
+    tasks: { [key: string]: Task<any> };           // mapping from name of the tasks to task objects
+    entry: string;                                 // the task to start with
+    results: { [key: string]: Promise<any>} = {};  // mapping from name of the tasks to the results of tasks
 
     constructor(tasks: { [key: string]: Task<any> }, entry: string) {
         this.tasks = tasks;
@@ -46,7 +43,9 @@ export class Tasker {
                 // this task has not been executed yet
                 const prereq = tasks[name].prerequisite.map(task);
                 results[name] = Promise.all(prereq).then((prereqResult) => {
+                    // first wait until all prerequisites are done
                     taskStart?.(name);
+                    // then execute the task by calling its callback function
                     return tasks[name].callback(...prereqResult).then(
                         (value) => {
                             taskComplete?.(name);

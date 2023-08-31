@@ -80,6 +80,12 @@ export class PlayerElement extends GameElement {
         this.update();
     }
 
+    /**
+     * Override the update method of GameElement.
+     * 
+     * In player's update, we also update the state of the player displayed on the left and the
+     * vision circle if the vision circle is enabled.
+     */
     override update() {
         super.update();
         this.setState?.(this.getState());

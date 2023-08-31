@@ -3,6 +3,12 @@ import AuctionRulePanel from "./components/auction-rule";
 import { GameDisplay } from "./game-display";
 import { EventEntry } from "./event";
 
+/**
+ * This timer function is used to display the time left for auction.
+ * It will call the callback function every second.
+ * @param millis milliseconds until timer ends
+ * @param callback callback function to call every second
+ */
 function timer(millis: number, callback: (secs: number) => void) {
     const lowestSecs = Math.floor(millis / 1000);
     callback(lowestSecs + 1);
@@ -20,8 +26,22 @@ function timer(millis: number, callback: (secs: number) => void) {
 }
 
 export interface PricingRule {
+    /**
+     * name of the pricing rule
+     */
     name: string;
+
+    /**
+     * Initialize the pricing rule. This includes set up the UI and other necessary initializations.
+     * @param game The game
+     */
     init: (game: GameDisplay) => void;
+
+    /**
+     * Process an incoming `Market Update` event based on the pricing rule.
+     * @param game The game
+     * @param event The event to be processed
+     */
     processEvent: (game: GameDisplay, event: EventEntry) => void;
 };
 

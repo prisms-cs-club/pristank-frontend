@@ -1,3 +1,7 @@
+/**
+ * This module loads necessary resources and initialize the game.
+ */
+
 import { createElement } from "react";
 import { KeyBinding } from "./action";
 import TextBox from "@/components/text-box";
@@ -33,8 +37,8 @@ export type LoadOptions = {
     KEY_BINDING_LOCATION?: string;
     socketTimeout: number;  // Timeout of the web socket (in miliseconds).
                             // If the connection to server is not established within the timeout, it will throw an error.
-    mode: LoaderMode;    // game mode
-    displayHP: boolean;  // Whether to display HP bar
+    mode: LoaderMode;       // game mode
+    displayHP: boolean;     // Whether to display HP bar
     displayVisionCirc: boolean; // Whether to display vision range
     displayDebugStr: boolean;   // Whether to display debug string
 };
@@ -48,6 +52,7 @@ export type LoadOptions = {
  * @returns The tasker that yields a GameDisplay object.
  */
 export function load(options: LoadOptions) {
+    // `userInteractionNode` is the DOM element for rendering the text box for reading user input.
     let userInteractionNode: ReactDOM.Root | undefined = undefined;
 
     function getOrCreateUserInteraction(): ReactDOM.Root {
@@ -63,7 +68,7 @@ export function load(options: LoadOptions) {
         callback: async () => {
             const data = (await fetch(options.ELEMENT_DATA_LOCATION ?? DEFAULT_ELEMENT_DATA_LOCATION)).json();
             for(const [_, entry] of Object.entries(await data as { [key: string]: ElementData })) {
-                // fill out the default values
+                // fill the default values
                 for(const part of entry.parts) {
                     part.xOffset ??= 0;
                     part.yOffset ??= 0;

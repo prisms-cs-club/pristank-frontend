@@ -1,3 +1,8 @@
+/**
+ * This module handles player's actions (key pressing, clicking, game console input, etc.) and send
+ * the actions to the server through websocket.
+ */
+
 import { GameDisplay, PlayerMode } from "./game-display";
 import { PlayerElement } from "./player";
 

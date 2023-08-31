@@ -2,7 +2,7 @@ import styles from "@/app/page.module.css";
 import { useContext } from "react";
 import { GameContext } from "./game-scene";
 import { EndEvent } from "@/event";
-import { assertDef, sortBy } from "@/utils/other";
+import { assertDef, sortByKey } from "@/utils/other";
 
 export default function GameEndPanel({endEvent}: {endEvent: EndEvent}) {
     const game = useContext(GameContext);

@@ -45,6 +45,6 @@ export function assertDef<T>(val?: T, errorMessage?: string): T {
 ////     return val!!;
 //// }
 
-export function sortBy<T>(arr: T[], key: (a: T) => number) {
+export function sortByKey<T>(arr: T[], key: (a: T) => number) {
     return arr.sort((a, b) => key(a) - key(b));
 }

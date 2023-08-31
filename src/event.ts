@@ -20,6 +20,9 @@ export class GameEvent {
     }
 }
 
+/**
+ * This is for sorting events by their timestamp in priority queue, now deprecated.
+ */
 GameEvent.prototype.valueOf = function() {
     return this.t;
 }
@@ -74,6 +77,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                 GAME_EVENTS.PlrUpd(game, param.plr);    // pass the `plr` parameter to player update event handler
             }
             if(game.options.mode.kind == "RealTime") {
+                // if the game is in real-time mode and this player is the current player, set the visibility of all elements
                 if(elem.name == game.options.mode.name) {
                     game.options.mode.myUID = param.uid;
                     game.options.mode.myPlayer = elem;
@@ -169,6 +173,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         // Game End event
         // This is triggerd when the game ends.
         game.gameEndCallback(param as EndEvent);
+        game.pause();
     }
 };
 

@@ -118,6 +118,11 @@ export class GameDisplay {
         this.app.ticker.start();
     }
 
+    pause() {
+        console.log("game stop");
+        this.app.ticker.stop();
+    }
+
     /**
      * This function is called when the window is resized. The function will resize game display,
      * recalculate the unitPixel, and update all elements' position.
@@ -251,6 +256,11 @@ export class GameDisplay {
         }
     }
 
+    /**
+     * Update the visibility of all elements according to the given player's vision radius.
+     * @param player The player in the center of vision circle.
+     * @param radius Radius of the vision.
+     */
     updateVisibility(player: PlayerElement, radius: number) {
         this.elemList.forEach((elem, uid) => {
             if(!(elem instanceof PlayerElement)) {

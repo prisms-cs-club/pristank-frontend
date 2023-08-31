@@ -92,12 +92,13 @@ export class GameElement {
     update() {
         this.outerContainer.x = this.x * this.gameIn.unitPixel;
         this.outerContainer.y = (this.gameIn.height - this.y) * this.gameIn.unitPixel;
-        this.innerContainer.rotation = -this.rad;    // Because in PIXI.js, `rotation` is the angle rotating clockwise
-                                                // and we want counterclockwise rotation
+        this.innerContainer.rotation = -this.rad;   // Because in PIXI.js, `rotation` is the angle rotating clockwise
+                                                    // and we want counterclockwise rotation
         if(this.gameIn.options.displayHP && this.hp && this.maxHp && this.hp != this.maxHp) {
             // Add HP bar
             if(!this.hpBar) {
                 this.hpBar = new PIXI.Graphics();
+                // HP bar is added to the outer container since it should not be rotated with the tank
                 this.outerContainer.addChild(this.hpBar);
             }
             const hpRatio = this.hp / this.maxHp;
