@@ -3,7 +3,7 @@
  */
 
 import { createElement } from "react";
-import { KeyBinding } from "./action";
+import { GamepadBinding, KeyBinding } from "./action";
 import TextBox from "@/components/text-box";
 import { ElementData, ElementModelPart } from "./element";
 import { EventEntry, GAME_EVENTS, GameEvent, InitEvent } from "./event";
@@ -30,11 +30,16 @@ export type LoaderMode = LoadReplay | LoadRealTime;
 export const DEFAULT_ELEMENT_DATA_LOCATION = "/resource/element-data.json";
 export const DEFAULT_TEXTURES_LOCATION = "/resource/textures.json";
 export const DEFAULT_KEY_BINDING_LOCATION = "/resource/key-binding.json";
+export const DEFAULT_GAMEPAD_BINDING_LOCATION = "/resource/gamepad-binding.json";
 
 export type LoadOptions = {
-    ELEMENT_DATA_LOCATION?: string;
-    TEXTURES_LOCATION?: string;
-    KEY_BINDING_LOCATION?: string;
+    boot?: {
+        elementData?: string,
+        textures?: string,
+        keyBinding?: string,
+        gamepadBinding?: string,
+    },
+    GAMEPAD_BINDING_LOCATION?: string;
     socketTimeout: number;  // Timeout of the web socket (in miliseconds).
                             // If the connection to server is not established within the timeout, it will throw an error.
     mode: LoaderMode;       // game mode
@@ -66,7 +71,7 @@ export function load(options: LoadOptions) {
         // load element data from "/resource/element-data.json"
         prerequisite: [],
         callback: async () => {
-            const data = (await fetch(options.ELEMENT_DATA_LOCATION ?? DEFAULT_ELEMENT_DATA_LOCATION)).json();
+            const data = (await fetch(options.boot?.elementData ?? DEFAULT_ELEMENT_DATA_LOCATION)).json();
             for(const [_, entry] of Object.entries(await data as { [key: string]: ElementData })) {
                 // fill the default values
                 for(const part of entry.parts) {
@@ -86,7 +91,7 @@ export function load(options: LoadOptions) {
         prerequisite: [],
         callback: async () => {
             const textures = new Map<string, PIXI.Texture>();
-            const textureNames = (await fetch(options.TEXTURES_LOCATION ?? DEFAULT_TEXTURES_LOCATION)).json();
+            const textureNames = (await fetch(options.boot?.textures ?? DEFAULT_TEXTURES_LOCATION)).json();
             for(const [name, file] of Object.entries(await textureNames)) {
                 textures.set(name, PIXI.Texture.from(`/resource/texture/${file}`));
             }
@@ -174,12 +179,19 @@ export function load(options: LoadOptions) {
         case "RealTime": {
             /*** Real-Time Playing Mode ****/
             const realTimeMode = options.mode;
-            const loadKeyBinding: Task<KeyBinding> = {
+            const loadBinding: Task<[KeyBinding, GamepadBinding]> = {
                 // load key binding from file
                 prerequisite: [],
                 callback: async () => {
-                    const data = (await fetch(options.KEY_BINDING_LOCATION ?? DEFAULT_KEY_BINDING_LOCATION)).json();
-                    return new Map(Object.entries(await data)) as KeyBinding;
+                    const keyData = await (await fetch(options.boot?.keyBinding ?? DEFAULT_KEY_BINDING_LOCATION)).json();
+                    const gamepadData = await (await fetch(options.boot?.gamepadBinding ?? DEFAULT_GAMEPAD_BINDING_LOCATION)).json();
+                    function parseIntMap<T>(obj: { [key: string]: T }): Map<number, T> {
+                        return new Map(Object.entries(obj).map(([k, v]) => [parseInt(k), v]));
+                    }
+                    return [
+                        new Map(Object.entries(keyData)) as KeyBinding,
+                        { "buttons": parseIntMap(gamepadData.buttons), "axes": parseIntMap(gamepadData.axes) } as GamepadBinding
+                    ];
                 }
             };
             const acquireName: Task<string> = {
@@ -205,11 +217,11 @@ export function load(options: LoadOptions) {
             }
             const initGameDisplay: Task<GameDisplay> = {
                 // initialize the game display with the loaded data
-                prerequisite: ["load element data", "load textures", "load key bindings", "acquire name", "acquire port number"],
+                prerequisite: ["load element data", "load textures", "load bindings", "acquire name", "acquire port number"],
                 callback: (
                     elemData: Map<string, ElementData>,
                     textures: Map<string, PIXI.Texture>,
-                    keyBinding: KeyBinding,
+                    [keyBinding, gamepadBinding]: [KeyBinding, GamepadBinding],
                     name: string,
                     port: number,
                 ) => {
@@ -223,7 +235,7 @@ export function load(options: LoadOptions) {
                             antialias: true,
                         });
                         const mode: PlayerMode | ObserverMode = (name != "") ?
-                            { kind: "RealTime", socket, keyBinding, name } :
+                            { kind: "RealTime", socket, keyBinding, gamepadBinding, name } :
                             { kind: "Observer", socket };
                         socket.onmessage = msg => {
                             const initEvent = JSON.parse(msg.data) as InitEvent;
@@ -250,7 +262,7 @@ export function load(options: LoadOptions) {
             return new Tasker({
                 "load element data": loadElemData,
                 "load textures": loadTextures,
-                "load key bindings": loadKeyBinding,
+                "load bindings": loadBinding,
                 "acquire name": acquireName,
                 "acquire port number": acquirePortNum,
                 "initialize game": initGameDisplay

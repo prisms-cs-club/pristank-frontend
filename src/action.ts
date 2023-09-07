@@ -120,3 +120,42 @@ export function keyUpEvent(game: GameDisplay, mode: PlayerMode, binding: KeyBind
         }
     }
 }
+
+export type GamepadBinding = {
+    "buttons": Map<number, string>,
+    "axes": Map<number, string>,
+};
+
+var gamepadCache: { [key: string]: number | boolean } = {
+    "lTrackDir": false,
+    "rTrackDir": false,
+    "fire": false,
+    "lTrackSpeed": 0,
+    "rTrackSpeed": 0,
+};
+
+function cacheToAction(game: GameDisplay, mode: PlayerMode) {
+    if(mode.myPlayer != undefined) {
+        const ans = [
+            `lTrack ${(gamepadCache.lTrackSpeed as number) * (gamepadCache.lTrackDir ? -1 : 1) * mode.myPlayer.tankSpeed}`,
+            `rTrack ${(gamepadCache.rTrackSpeed as number) * (gamepadCache.rTrackDir ? -1 : 1) * mode.myPlayer.tankSpeed}`
+        ];
+        if(gamepadCache.fire) {
+            ans.push("fire");
+        }
+        return ans;
+    } else {
+        return [];
+    }
+}
+
+export function gamepadLoop(game: GameDisplay, mode: PlayerMode, gamepad: Gamepad) {
+    mode.gamepadBinding.buttons.forEach((action, buttonID) => {
+        gamepadCache[action] = gamepad.buttons[buttonID].pressed;
+    });
+    // TODO: axes
+    for(const str of cacheToAction(game, mode)) {
+        // console.log(Math.floor(game.timer) + " " + str);
+        mode.socket.send(Math.floor(game.timer) + " " + str);
+    }
+}

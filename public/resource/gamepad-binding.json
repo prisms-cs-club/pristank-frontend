@@ -1,0 +1,10 @@
+{
+    "buttons": {
+        "4": "lTrackDir",
+        "5": "rTrackDir",
+        "6": "lTrackSpeed",
+        "7": "rTrackSpeed",
+        "0": "fire"
+    },
+    "axes": {}
+}

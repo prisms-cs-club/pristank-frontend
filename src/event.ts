@@ -44,7 +44,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         for(let j = 0; j < game.height; j++) {
             for(let i = 0; i < game.width; i++) {
                 if(newMap[j * game.width + i] && newMap[j * game.width + i] != "") {
-                    const type = game.elemData.get(newMap[j * game.width + i])!!;
+                    const type = game.elemData.get(newMap[j * game.width + i])!;
                     const elem = new GameElement(type, game, i + 0.5, game.height - j - 0.5, 0, 1, 1);
                     if(game.options.mode.kind == "RealTime") {
                         // For real-time mode, every block should be invisible at first.
@@ -102,7 +102,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         // This is triggered when an element is removed from the screen.
         const elem = game.removeElement(assertDef(param.uid, "Element remove event must have uid."));
         if(elem instanceof PlayerElement) {
-            game.getPlayer(param.uid)!!.alive = false;  // Set the `alive` of this player to false
+            game.getPlayer(param.uid)!.alive = false;  // Set the `alive` of this player to false
             if(game.options.mode.kind == "RealTime") {
                 if(param.uid == game.options.mode.myUID) {
                     // If this player dies, output an error message and set all element to visible.
@@ -110,7 +110,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                     game.makeAllVisible();
                 } else {
                     // If in real-time mode, only the current player's status is visible.
-                    game.setPlayers([game.options.mode.myPlayer!!]);
+                    game.setPlayers([game.options.mode.myPlayer!]);
                 }
             } else {
                 // Otherwise, all players' status are visible.
@@ -159,7 +159,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                 const mode = game.options.mode;
                 // Properties of the player controlled by this program is updated in real-time mode.
                 // Therefore, update the visibility of elements around this player.
-                game.updateVisibility(elem as PlayerElement, mode.myPlayer!!.visionRadius);
+                game.updateVisibility(elem as PlayerElement, mode.myPlayer!.visionRadius);
             }
         }
     },

@@ -75,6 +75,7 @@ export class AuctionRule implements PricingRule {
             }
             this.setSelling(toSellStr);
             this.setMinBid(event.minBid!!);
+            this.setLastBidder(undefined);
             timer(event.endT - game.timer, this.setDuration);
         } else if(event.bidder != undefined) {
             // middle of auction

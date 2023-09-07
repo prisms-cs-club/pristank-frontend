@@ -3,7 +3,7 @@ import { ElementData, GameElement } from "./element";
 import { EndEvent, EventEntry, GAME_EVENTS, GameEvent, InitEvent } from "./event";
 import * as PIXI from "pixi.js";
 import { PlayerElement, PlayerState } from "./player";
-import { KeyBinding, actions, keyDownEvent, keyUpEvent } from "./action";
+import { GamepadBinding, KeyBinding, actions, gamepadLoop, keyDownEvent, keyUpEvent } from "./action";
 import { Queue } from "@datastructures-js/queue";
 import { PricingRule } from "./market";
 
@@ -16,6 +16,7 @@ export interface PlayerMode {
     readonly kind: "RealTime";
     socket: WebSocket;
     keyBinding: KeyBinding;
+    gamepadBinding: GamepadBinding;
     name: string;
     myUID?: number;                 // UID of the tank controlled by the player
     myPlayer?: PlayerElement;       // The tank controlled by the player
@@ -44,6 +45,7 @@ export type GameOptions = {
 export class GameDisplay {
     options: GameOptions;                  // TODO: a better design
     app: PIXI.Application;
+    gamepadID?: number;                    // ID of the first gamepad connected, if any.
     timer: number = 0;                     // Timer. This is set to 0 when the game starts.
     textures: Map<string, PIXI.Texture>;   // Collection of textures
     width: number;      // width in game unit (number of blocks)
@@ -80,17 +82,10 @@ export class GameDisplay {
     
         // initialize ticker
         this.app.ticker.autoStart = false;
-        this.app.ticker.add(_ => {
-            try {
-                this.updateAt(this.timer);
-                this.timer += this.app.ticker.elapsedMS;
-            } catch(e) {
-                errorCallback?.(["An error occured.", "Press F12 and check \"console\" page for more detail."]);
-            }
-        });
+        this.app.ticker.add(_ => GameDisplay.gameLoop(this));
 
         if(options.mode.kind == "RealTime" || options.mode.kind == "Observer") {
-            const socket = options.mode.socket!!;
+            const socket = options.mode.socket!;
             // intiialize socket
             socket.onmessage = msgEvent => {
                 const data = JSON.parse(msgEvent.data) as EventEntry;
@@ -105,11 +100,34 @@ export class GameDisplay {
             }
             if(options.mode.kind == "RealTime") {
                 const mode = options.mode;
-                const binding = options.mode.keyBinding!!;
-                // add event listeners to keys
+                const binding = options.mode.keyBinding!;
+                // add event listeners to keys and gamepads
                 window.addEventListener("keydown", keyDownEvent(this, mode, binding));
                 window.addEventListener("keyup", keyUpEvent(this, mode, binding));
+                window.addEventListener("gamepadconnected", event => {
+                    console.log(`gamepad ${event.gamepad.id} connected`);
+                    this.gamepadID = event.gamepad.index;
+                });
+                window.addEventListener("gamepaddisconnected", event => {
+                    console.log(`gamepad ${event.gamepad.id} disconnected`);
+                    if(event.gamepad.index == this.gamepadID) {
+                        this.gamepadID = undefined;
+                    }
+                });
             }
+        }
+    }
+
+    static gameLoop(game: GameDisplay) {
+        try {
+            game.updateAt(game.timer);
+            if(game.options.mode.kind == "RealTime" && game.gamepadID != undefined) {
+                // if any game pad is connected, use it to control the tank
+                gamepadLoop(game, game.options.mode, navigator.getGamepads()[game.gamepadID]!);
+            }
+            game.timer += game.app.ticker.elapsedMS;
+        } catch(e) {
+            game.errorCallback?.(["An error occured.", "Press F12 and check \"console\" page for more detail."]);
         }
     }
 
