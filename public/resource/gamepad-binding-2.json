@@ -1,0 +1,11 @@
+{
+    "mode": 2,
+    "buttons": {
+        "0": "fire",
+        "6": "speed"
+    },
+    "axes": {
+        "0": "dirX",
+        "1": "dirY"
+    }
+}

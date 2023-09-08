@@ -48,7 +48,7 @@ export default function LoadingScene<T>({ tasker, allComplete }: { tasker: Taske
         (async () => {
             await tasker.start<T>(taskStart, taskComplete, taskError).then(allComplete);
         })();
-    });
+    }, [allComplete, tasker]);
     return (
         <div id="root" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
             <h1 style={{textAlign: 'center', alignSelf: 'center'}}>Loading...</h1>

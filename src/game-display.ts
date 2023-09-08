@@ -127,6 +127,7 @@ export class GameDisplay {
             }
             game.timer += game.app.ticker.elapsedMS;
         } catch(e) {
+            console.error(e);
             game.errorCallback?.(["An error occured.", "Press F12 and check \"console\" page for more detail."]);
         }
     }

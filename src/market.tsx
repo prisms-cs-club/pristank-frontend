@@ -4,7 +4,8 @@ import { GameDisplay } from "./game-display";
 import { EventEntry } from "./event";
 
 /**
- * This timer function is used to display the time left for auction.
+ * Helper function. This function is for displaying the time left for auction.
+ * 
  * It will call the callback function every second.
  * @param millis milliseconds until timer ends
  * @param callback callback function to call every second
@@ -47,8 +48,8 @@ export interface PricingRule {
 
 export class NoneRule implements PricingRule {
     name = "None";
-    init(game: GameDisplay) {}
-    processEvent(game: GameDisplay, event: EventEntry) {}
+    init() {}
+    processEvent() {}
 }
 
 export class AuctionRule implements PricingRule {

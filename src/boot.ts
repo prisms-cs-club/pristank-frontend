@@ -30,7 +30,7 @@ export type LoaderMode = LoadReplay | LoadRealTime;
 export const DEFAULT_ELEMENT_DATA_LOCATION = "/resource/element-data.json";
 export const DEFAULT_TEXTURES_LOCATION = "/resource/textures.json";
 export const DEFAULT_KEY_BINDING_LOCATION = "/resource/key-binding.json";
-export const DEFAULT_GAMEPAD_BINDING_LOCATION = "/resource/gamepad-binding.json";
+export const DEFAULT_GAMEPAD_BINDING_LOCATION = "/resource/gamepad-binding-1.json";
 
 export type LoadOptions = {
     boot?: {
@@ -190,7 +190,11 @@ export function load(options: LoadOptions) {
                     }
                     return [
                         new Map(Object.entries(keyData)) as KeyBinding,
-                        { "buttons": parseIntMap(gamepadData.buttons), "axes": parseIntMap(gamepadData.axes) } as GamepadBinding
+                        {
+                            "mode": gamepadData.mode,
+                            "buttons": parseIntMap(gamepadData.buttons),
+                            "axes": parseIntMap(gamepadData.axes)
+                        } as GamepadBinding
                     ];
                 }
             };

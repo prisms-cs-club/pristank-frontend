@@ -1,4 +1,5 @@
 {
+    "mode": 1,
     "buttons": {
         "4": "lTrackDir",
         "5": "rTrackDir",

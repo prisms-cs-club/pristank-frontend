@@ -80,7 +80,7 @@ export default function MapEditorScene({mapEditor}: {mapEditor: MapEditor}) {
             abbr.appendChild(image);
             blocks.appendChild(abbr);
         }
-    });
+    }, [mapEditor]);
     return (
         <div id="root">
             <div className={styles["left-panel"]}>

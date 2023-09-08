@@ -121,41 +121,73 @@ export function keyUpEvent(game: GameDisplay, mode: PlayerMode, binding: KeyBind
     }
 }
 
+/*** Gamepad ***/
+
 export type GamepadBinding = {
+    "mode": 1 | 2,
     "buttons": Map<number, string>,
     "axes": Map<number, string>,
 };
 
-var gamepadCache: { [key: string]: number | boolean } = {
-    "lTrackDir": false,
-    "rTrackDir": false,
-    "fire": false,
-    "lTrackSpeed": 0,
-    "rTrackSpeed": 0,
-};
-
-function cacheToAction(game: GameDisplay, mode: PlayerMode) {
-    if(mode.myPlayer != undefined) {
+/**
+ * This array defines the two gamepad modes.
+ * 
+ * Each element is a function that takes the gamepad input and the player mode, and returns
+ * the commands to be sent to the server.
+ * 
+ * TODO: optimize the gamepad mode
+ */
+const gamepadModes: ((input: { [key: string]: number }, player: PlayerElement, mode: PlayerMode) => string[])[] = [
+    function(_) { return []; },  // placeholder for mode 0
+    function(input: { [key: string]: number }, player: PlayerElement, mode: PlayerMode) {
+        // mode 1: B6 and B7 controls the left and right track speed, B4 and B5 controls the left and right track direction
         const ans = [
-            `lTrack ${(gamepadCache.lTrackSpeed as number) * (gamepadCache.lTrackDir ? -1 : 1) * mode.myPlayer.tankSpeed}`,
-            `rTrack ${(gamepadCache.rTrackSpeed as number) * (gamepadCache.rTrackDir ? -1 : 1) * mode.myPlayer.tankSpeed}`
+            `lTrack ${(input.lTrackSpeed) * (input.lTrackDir ? -1 : 1) * player.tankSpeed}`,
+            `rTrack ${(input.rTrackSpeed) * (input.rTrackDir ? -1 : 1) * player.tankSpeed}`
         ];
-        if(gamepadCache.fire) {
+        if(input.fire) {
             ans.push("fire");
         }
         return ans;
-    } else {
-        return [];
+    },
+    function(input: { [key: string]: number }, player: PlayerElement, mode: PlayerMode) {
+        // mode 2: two axes controls the direction of the tank, and one button controls the speed of the tank
+        function axesCurve(x: number) {
+            return Math.sign(x) * Math.sqrt(Math.abs(x));
+        }
+        const leftTrackMul = axesCurve((input.dirX - input.dirY) * Math.SQRT1_2);
+        const rightTrackMul = axesCurve((-input.dirX - input.dirY) * Math.SQRT1_2);
+        console.log(leftTrackMul, rightTrackMul, input.speed);
+        const ans = [
+            `lTrack ${leftTrackMul * player.tankSpeed * input.speed}`,
+            `rTrack ${rightTrackMul * player.tankSpeed * input.speed}`
+        ];
+        if(input.fire) {
+            ans.push("fire");
+        }
+        return ans;
     }
-}
+];
 
+/**
+ * This is run with the game main loop to read the gamepad input and send the commands to the
+ * server, once a gamepad is connected.
+ * @param game game display
+ * @param mode player mode
+ * @param gamepad gamepad object to read input from
+ */
 export function gamepadLoop(game: GameDisplay, mode: PlayerMode, gamepad: Gamepad) {
-    mode.gamepadBinding.buttons.forEach((action, buttonID) => {
-        gamepadCache[action] = gamepad.buttons[buttonID].pressed;
-    });
-    // TODO: axes
-    for(const str of cacheToAction(game, mode)) {
-        // console.log(Math.floor(game.timer) + " " + str);
-        mode.socket.send(Math.floor(game.timer) + " " + str);
+    if(mode.myPlayer != undefined) {
+        const gamepadInput: { [key: string]: number } = {};
+        mode.gamepadBinding.buttons.forEach((action, buttonID) => {
+            gamepadInput[action] = gamepad.buttons[buttonID].value;
+        });
+        mode.gamepadBinding.axes.forEach((action, axisID) => {
+            gamepadInput[action] = gamepad.axes[axisID];
+        });
+        for(const str of gamepadModes[mode.gamepadBinding.mode](gamepadInput, mode.myPlayer, mode)) {
+            //// console.log(Math.floor(game.timer) + " " + str);
+            mode.socket.send(Math.floor(game.timer) + " " + str);
+        }
     }
 }
