@@ -2,6 +2,7 @@ import ReactDOM from "react-dom/client";
 import AuctionRulePanel from "./components/auction-rule";
 import { GameDisplay } from "./game-display";
 import { EventEntry } from "./event";
+import { GamepadBinding } from "./action";
 
 /**
  * Helper function. This function is for displaying the time left for auction.
@@ -39,6 +40,15 @@ export interface PricingRule {
     init: (game: GameDisplay) => void;
 
     /**
+     * Modify the gamepad binding based on the pricing rule (optional).
+     * 
+     * If the pricing rule requires more types of actions from the user, this allows the
+     * designer of pricing rule to be able to add new bindings to the gamepad.
+     * @param binding Gamepad binding to be modified
+     */
+    modifyGamepadBinding?: (binding: GamepadBinding) => void;
+
+    /**
      * Process an incoming `Market Update` event based on the pricing rule.
      * @param game The game
      * @param event The event to be processed
@@ -65,6 +75,11 @@ export class AuctionRule implements PricingRule {
             <AuctionRulePanel rule={this} game={game}></AuctionRulePanel>
         );
     }
+
+    modifyGamepadBinding(binding: GamepadBinding) {
+        // TODO: add bid button and price axis
+    }
+
     processEvent(game: GameDisplay, event: EventEntry) {
         if(event.toSell != undefined) {
             // start of auction

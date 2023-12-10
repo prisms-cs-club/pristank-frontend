@@ -105,8 +105,8 @@ export class PlayerElement extends GameElement {
         return {
             alive: this.alive,
             money: this.money,
-            hp: this.hp!!,
-            maxHp: this.maxHp!!,
+            hp: this.hp!,
+            maxHp: this.maxHp!,
             visionRadius: this.visionRadius,
             speed: this.tankSpeed,
             debugString: this.debugStr,

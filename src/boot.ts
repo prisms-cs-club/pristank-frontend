@@ -27,11 +27,18 @@ export interface LoadRealTime {
 
 export type LoaderMode = LoadReplay | LoadRealTime;
 
+export const DEFAULT_UI_ICON_LOCATION = "/resource/ui-icon.json";
 export const DEFAULT_ELEMENT_DATA_LOCATION = "/resource/element-data.json";
 export const DEFAULT_TEXTURES_LOCATION = "/resource/textures.json";
 export const DEFAULT_KEY_BINDING_LOCATION = "/resource/key-binding.json";
 export const DEFAULT_GAMEPAD_BINDING_LOCATION = "/resource/gamepad-binding-1.json";
 
+/**
+ * Options for loading the game.
+ * 
+ * You can specify the path of each resource file, timeout of socket connection, etc. in
+ * this object.
+ */
 export type LoadOptions = {
     boot?: {
         elementData?: string,
@@ -39,7 +46,6 @@ export type LoadOptions = {
         keyBinding?: string,
         gamepadBinding?: string,
     },
-    GAMEPAD_BINDING_LOCATION?: string;
     socketTimeout: number;  // Timeout of the web socket (in miliseconds).
                             // If the connection to server is not established within the timeout, it will throw an error.
     mode: LoaderMode;       // game mode
@@ -71,8 +77,8 @@ export function load(options: LoadOptions) {
         // load element data from "/resource/element-data.json"
         prerequisite: [],
         callback: async () => {
-            const data = (await fetch(options.boot?.elementData ?? DEFAULT_ELEMENT_DATA_LOCATION)).json();
-            for(const [_, entry] of Object.entries(await data as { [key: string]: ElementData })) {
+            const data = await fetch(options.boot?.elementData ?? DEFAULT_ELEMENT_DATA_LOCATION).then(data => data.json());
+            for(const [_, entry] of Object.entries(data as { [key: string]: ElementData })) {
                 // fill the default values
                 for(const part of entry.parts) {
                     part.xOffset ??= 0;
@@ -84,15 +90,15 @@ export function load(options: LoadOptions) {
             }
             return new Map(Object.entries(await data));
         }
-    }
+    };
 
     const loadTextures: Task<Map<string, PIXI.Texture>> = {
         // load all textures using the entries in "/resource/textures.json"
         prerequisite: [],
         callback: async () => {
             const textures = new Map<string, PIXI.Texture>();
-            const textureNames = (await fetch(options.boot?.textures ?? DEFAULT_TEXTURES_LOCATION)).json();
-            for(const [name, file] of Object.entries(await textureNames)) {
+            const textureNames = await (fetch(options.boot?.textures ?? DEFAULT_TEXTURES_LOCATION)).then(data => data.json());
+            for(const [name, file] of Object.entries(textureNames)) {
                 textures.set(name, PIXI.Texture.from(`/resource/texture/${file}`));
             }
             return textures;
@@ -147,7 +153,7 @@ export function load(options: LoadOptions) {
                 callback: async (
                     elemData: Map<string, ElementData>,
                     textures: Map<string, PIXI.Texture>,
-                    [replay, initEvent]: [GameEvent[], InitEvent]
+                    [replay, initEvent]: [GameEvent[], InitEvent],
                 ) => {
                     const app = new PIXI.Application({
                         width: window.innerWidth,
@@ -162,7 +168,7 @@ export function load(options: LoadOptions) {
                         displayHP: options.displayHP,
                         displayVisionCirc: options.displayVisionCirc,
                         displayDebugStr: options.displayDebugStr,
-                        defaultPlayerProp: initEvent.plr
+                        defaultPlayerProp: initEvent.plr,
                     });
                     return game;
                 }
@@ -221,7 +227,13 @@ export function load(options: LoadOptions) {
             }
             const initGameDisplay: Task<GameDisplay> = {
                 // initialize the game display with the loaded data
-                prerequisite: ["load element data", "load textures", "load bindings", "acquire name", "acquire port number"],
+                prerequisite: [
+                    "load element data",
+                    "load textures",
+                    "load bindings",
+                    "acquire name",
+                    "acquire port number"
+                ],
                 callback: (
                     elemData: Map<string, ElementData>,
                     textures: Map<string, PIXI.Texture>,
@@ -238,6 +250,8 @@ export function load(options: LoadOptions) {
                             backgroundColor: 0x000000,
                             antialias: true,
                         });
+                        // if the name is left blank, automatically enter observer mode
+                        // otherwise, enter real-time playing mode
                         const mode: PlayerMode | ObserverMode = (name != "") ?
                             { kind: "RealTime", socket, keyBinding, gamepadBinding, name } :
                             { kind: "Observer", socket };

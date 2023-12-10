@@ -103,8 +103,8 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         const elem = game.removeElement(assertDef(param.uid, "Element remove event must have uid."));
         if(elem instanceof PlayerElement) {
             game.getPlayer(param.uid)!.alive = false;  // Set the `alive` of this player to false
-            if(game.options.mode.kind == "RealTime") {
-                if(param.uid == game.options.mode.myUID) {
+            if(game.options.mode.kind === "RealTime") {
+                if(param.uid === game.options.mode.myUID) {
                     // If this player dies, output an error message and set all element to visible.
                     game.errorCallback?.(["You died!"]);
                     game.makeAllVisible();
@@ -128,7 +128,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             elem.rad = param.rad ?? elem.rad;
             elem.hp = param.hp ?? elem.hp;
             elem.update();
-            if(game.options.mode.kind == "RealTime" && game.options.mode.myPlayer != undefined) {
+            if(game.options.mode.kind === "RealTime" && game.options.mode.myPlayer != undefined) {
                 const player = game.options.mode.myPlayer;
                 // If the current player's status is updated, update the visibility of elements around this player.
                 if(elem == player) {
@@ -155,7 +155,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             elem.debugStr = param.dbgStr ?? elem.debugStr;
             // TODO: support other properties that is able to update
             elem.update();
-            if(game.options.mode.kind == "RealTime" && game.options.mode.myUID != undefined && param.uid == game.options.mode.myUID) {
+            if(game.options.mode.kind === "RealTime" && game.options.mode.myUID != undefined && param.uid == game.options.mode.myUID) {
                 const mode = game.options.mode;
                 // Properties of the player controlled by this program is updated in real-time mode.
                 // Therefore, update the visibility of elements around this player.
