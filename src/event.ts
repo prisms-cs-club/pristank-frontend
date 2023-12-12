@@ -44,12 +44,13 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         for(let j = 0; j < game.height; j++) {
             for(let i = 0; i < game.width; i++) {
                 if(newMap[j * game.width + i] && newMap[j * game.width + i] != "") {
+                    // add a new block corresponding to the map
                     const type = game.elemData.get(newMap[j * game.width + i])!;
                     const elem = new GameElement(type, game, i + 0.5, game.height - j - 0.5, 0, 1, 1);
                     if(game.options.mode.kind == "RealTime") {
                         // For real-time mode, every block should be invisible at first.
                         // Otherwise the player can see the whole map at the beginning.
-                        elem.visible = false;
+                        elem.updateVisibility(false);
                     }
                     game.addElement(uid, elem);
                     uid++;
@@ -91,8 +92,8 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             // Other elements. Depending on the game mode and vision radius, some elements may be invisible.
             const elem = new GameElement(type, game, param.x, param.y, param.rad, param.width ?? type.width, param.height ?? type.height);
             if(game.options.mode.kind == "RealTime" &&
-                (game.options.mode.myPlayer == undefined || elem.getDistanceTo(game.options.mode.myPlayer) > game.options.mode.myPlayer.visionRadius)) {
-                elem.visible = false;
+                (game.options.mode.myPlayer === undefined || elem.getDistanceTo(game.options.mode.myPlayer) > game.options.mode.myPlayer.visionRadius)) {
+                elem.updateVisibility(false);
             }
             game.addElement(param.uid, elem);
         }
@@ -134,11 +135,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                 if(elem == player) {
                     game.updateVisibility(elem as PlayerElement, game.options.mode.myPlayer.visionRadius);
                 } else if(!(elem instanceof PlayerElement)) {
-                    if(elem.getDistanceTo(player) <= game.options.mode.myPlayer.visionRadius) {
-                        game.makeVisible(elem);
-                    } else {
-                        game.makeInvisible(elem);
-                    }
+                    elem.updateVisibility(elem.getDistanceTo(player) <= game.options.mode.myPlayer.visionRadius);
                 }
             }
         }

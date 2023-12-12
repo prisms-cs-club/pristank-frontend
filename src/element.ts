@@ -7,6 +7,9 @@ const HP_BAR_VERTICAL_BIAS = 5; // The vertical distance between the top of elem
 const HP_BAR_WIDTH = 50;        // The width of HP bar in pixels
 const HP_BAR_HEIGHT = 5;        // The height of HP bar in pixels
 
+// when an element is outside the player's visible range, this filter is applied to make it invisible.
+export const ELEMENT_INVISIBLE_FILTER = new PIXI.AlphaFilter(0.0);
+
 export function constructInnerContainer(type: ElementData, width: number, height: number, parent: MapEditor | GameDisplay, bgColor?: PIXI.Color) {
     const container = new PIXI.Container();
     for(const part of type.parts) {
@@ -109,6 +112,24 @@ export class GameElement {
                 topLeftY = this.height * this.gameIn.unitPixel * 0.8 + HP_BAR_VERTICAL_BIAS;
             }
             this.hpBar.drawRect(-HP_BAR_WIDTH / 2, topLeftY, HP_BAR_WIDTH * hpRatio, HP_BAR_HEIGHT);
+        }
+    }
+
+    /**
+     * Update the element's visibility.
+     * 
+     * Generally, you should avoid directly changing the `visible` field of the element, since
+     * the element's visibility on screen will not directly sync with the `visible` field.
+     * @param visible New visibility.
+     */
+    updateVisibility(visible: boolean) {
+        if(this.visible != visible) {
+            this.visible = visible;
+            if(visible) {
+                this.outerContainer.filters = null;
+            } else {
+                this.outerContainer.filters = [ELEMENT_INVISIBLE_FILTER];
+            }
         }
     }
 

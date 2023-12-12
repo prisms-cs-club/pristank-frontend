@@ -3,7 +3,7 @@ import { ElementData, GameElement } from "./element";
 import { EndEvent, EventEntry, GAME_EVENTS, GameEvent, InitEvent } from "./event";
 import * as PIXI from "pixi.js";
 import { PlayerElement, PlayerState } from "./player";
-import { GamepadBinding, KeyBinding, actions, gamepadLoop, keyDownEvent, keyUpEvent } from "./action";
+import { GamepadBinding, KeyBinding, actions, gamepadLoop, keyDownEvent, keyUpEvent } from "./input";
 import { Queue } from "@datastructures-js/queue";
 import { PricingRule } from "./market";
 
@@ -194,9 +194,7 @@ export class GameDisplay {
      */
     addElement(uid: UID, element: GameElement): GameElement {
         this.elemList.set(uid, element);
-        if(element.visible) {
-            this.app.stage.addChild(element.outerContainer);
-        }
+        this.app.stage.addChild(element.outerContainer);
         return element;
     }
 
@@ -208,9 +206,7 @@ export class GameDisplay {
         const element = this.elemList.get(uid);
         if(element) {
             this.elemList.delete(uid);
-            if(element.visible) {
-                this.app.stage.removeChild(element.outerContainer);
-            }
+            this.app.stage.removeChild(element.outerContainer);
         }
         return element;
     }
@@ -243,35 +239,11 @@ export class GameDisplay {
     }
 
     /**
-     * Make an element visible on the screen. This sets the `visible` field to true and adds the
-     * element's container to the stage.
-     * @param elem The element.
-     */
-    makeVisible(elem: GameElement) {
-        if(!elem.visible) {
-            elem.visible = true;
-            this.app.stage.addChild(elem.outerContainer); 
-        }
-    }
-
-    /**
-     * Make an element invisible on the screen. This sets the `visible` field to false and removes
-     * the element's container from the stage.
-     * @param elem The element.
-     */
-    makeInvisible(elem: GameElement) {
-        if(elem.visible) {
-            elem.visible = false;
-            this.app.stage.removeChild(elem.outerContainer);
-        }
-    }
-
-    /**
      * Make every element visible on the screen.
      */
     makeAllVisible() {
         for(const elem of this.elemList.values()) {
-            this.makeVisible(elem);
+            elem.updateVisibility(true);
         }
     }
 
@@ -283,11 +255,7 @@ export class GameDisplay {
     updateVisibility(player: PlayerElement, radius: number) {
         this.elemList.forEach((elem, uid) => {
             if(!(elem instanceof PlayerElement)) {
-                if(elem.getDistanceTo(player) <= radius) {
-                    this.makeVisible(elem);
-                } else {
-                    this.makeInvisible(elem);
-                }
+                elem.updateVisibility(elem.getDistanceTo(player) <= radius);
             }
         });
     }

@@ -2,7 +2,7 @@ import ReactDOM from "react-dom/client";
 import AuctionRulePanel from "./components/auction-rule";
 import { GameDisplay } from "./game-display";
 import { EventEntry } from "./event";
-import { GamepadBinding } from "./action";
+import { GamepadBinding } from "./input";
 
 /**
  * Helper function. This function is for displaying the time left for auction.

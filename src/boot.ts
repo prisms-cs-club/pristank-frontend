@@ -3,7 +3,7 @@
  */
 
 import { createElement } from "react";
-import { GamepadBinding, KeyBinding } from "./action";
+import { GamepadBinding, KeyBinding } from "./input";
 import TextBox from "@/components/text-box";
 import { ElementData, ElementModelPart } from "./element";
 import { EventEntry, GAME_EVENTS, GameEvent, InitEvent } from "./event";
