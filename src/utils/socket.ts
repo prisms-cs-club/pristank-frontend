@@ -3,7 +3,6 @@ export function sendCommand(command: string, socket: WebSocket, timer: number) {
 }
 
 export function sendAllCommands(commands: string[], socket: WebSocket, timer: number) {
-    console.log(commands);
     for(const command of commands) {
         sendCommand(command, socket, timer);
     }

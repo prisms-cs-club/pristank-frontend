@@ -17,7 +17,6 @@ export const gamepadBinding: GamepadBinding = (gamepad, player) => {
     const speed = gamepad.buttons[SPEED_BUTTON].value;
     const leftTrackMul = axesCurve((dirX - dirY) * Math.SQRT1_2);
     const rightTrackMul = axesCurve((-dirX - dirY) * Math.SQRT1_2);
-    console.log(leftTrackMul, rightTrackMul, speed);
     const ans = [
         `lTrack ${leftTrackMul * player.tankSpeed * speed}`,
         `rTrack ${rightTrackMul * player.tankSpeed * speed}`
