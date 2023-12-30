@@ -135,7 +135,7 @@ export class Game {
         // create the key map and add all bindings to the map
         mode.keymap = new KeyMap();
         for(const binding of mode.keyBinding) {
-            binding(mode.keymap!, this, mode.myPlayer!);
+            binding(mode.keymap!, mode.myPlayer!);
         }
         // add event listeners to keys and gamepads
         window.addEventListener("keydown", e => sendAllCommands(mode.keymap!.onKeyDown(e.code), mode.socket, this.timer));
@@ -149,7 +149,7 @@ export class Game {
                 // if any game pad is connected, use it to control the tank
                 const gamepad = navigator.getGamepads()[game.gamepadID]!;
                 const mode = game.options.mode;
-                const commands = mode.gamepadBindings.map(binding => binding(gamepad, game, mode.myPlayer!)).flat();
+                const commands = mode.gamepadBindings.map(binding => binding(gamepad, mode.myPlayer!)).flat();
                 sendAllCommands(commands, mode.socket, game.timer);
             }
             game.timer += game.app.ticker.elapsedMS;

@@ -5,7 +5,7 @@ export const DIR_Y_AXIS = 1;
 export const SPEED_BUTTON = 6;
 export const FIRE_BUTTON = 0;
 
-export const gamepadBinding: GamepadBinding = (gamepad, game, player) => {
+export const gamepadBinding: GamepadBinding = (gamepad, player) => {
     // Mode 2:
     // two axes controls the direction of the tank
     // one button controls the speed of the tank

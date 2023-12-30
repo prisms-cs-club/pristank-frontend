@@ -2,7 +2,7 @@ import { Game } from "@/game-display";
 import { KeyBinding, KeyMap } from "@/input";
 import { PlayerElement } from "@/player";
 
-export const keyBinding: KeyBinding = (keymap: KeyMap, game: Game, player: PlayerElement) => {
+export const keyBinding: KeyBinding = (keymap: KeyMap, player: PlayerElement) => {
     var keyPressedState = [false, false, false, false]; // up, left, down, right
     function getMovementFromState() {
         let vl: number = 0;

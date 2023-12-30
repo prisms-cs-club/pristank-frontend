@@ -2,9 +2,14 @@ import { Game } from "./game-display";
 import { PlayerElement } from "./player";
 
 export class KeyMap {
-    keyDownHandler: { [key: string]: (() => string[])[] } = {};
-    keyUpHandler: { [key: string]: (() => string[])[] } = {};
+    private keyDownHandler: { [key: string]: (() => string[])[] } = {};
+    private keyUpHandler: { [key: string]: (() => string[])[] } = {};
     
+    /**
+     * Add a new handler for a key down event.
+     * @param key The key to bind to
+     * @param handler The handler function that returns a list of commands.
+     */
     addKeyDownHandler(key: string, handler: () => string[]) {
         if(this.keyDownHandler[key] === undefined) {
             this.keyDownHandler[key] = [handler];
@@ -13,6 +18,11 @@ export class KeyMap {
         }
     }
 
+    /**
+     * Add a new handler for a key up event.
+     * @param key The key to bind to
+     * @param handler The handler function that returns a list of commands.
+     */
     addKeyUpHandler(key: string, handler: () => string[]) {
         if(this.keyUpHandler[key] === undefined) {
             this.keyUpHandler[key] = [handler];
@@ -36,6 +46,6 @@ export class KeyMap {
     }
 }
 
-export type KeyBinding = (keymap: KeyMap, game: Game, player: PlayerElement) => void;
+export type KeyBinding = (keymap: KeyMap, player: PlayerElement) => void;
 
-export type GamepadBinding = (gamepad: Gamepad, game: Game, player: PlayerElement) => string[];
+export type GamepadBinding = (gamepad: Gamepad, player: PlayerElement) => string[];

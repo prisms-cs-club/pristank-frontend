@@ -3,8 +3,8 @@ import { KeyBinding, KeyMap } from "@/input";
 import { AuctionRule } from "@/market";
 import { PlayerElement } from "@/player";
 
-export default function keyBinding(rule: AuctionRule) {
-    return (keymap: KeyMap, game: Game, player: PlayerElement) => {
+export default function keyBinding(rule: AuctionRule): KeyBinding {
+    return (keymap: KeyMap, player: PlayerElement) => {
         keymap.addKeyDownHandler("ArrowLeft", () => {
             if(rule.myBid > rule.minBid) {
                 rule.setBid(rule.myBid - 1);

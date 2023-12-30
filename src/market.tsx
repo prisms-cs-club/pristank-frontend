@@ -5,6 +5,7 @@ import { EventEntry } from "./event";
 import { GamepadBinding, KeyBinding } from "./input";
 import { sendCommand } from "./utils/socket";
 import auctionKeyBinding from "./bindings/key-auction-binding";
+import auctionGamepadBinding from "./bindings/gamepad-auction-binding";
 
 /**
  * Helper function. This function is for displaying the time left for auction.
@@ -60,10 +61,6 @@ export class NoneRule implements PricingRule {
 
 export class AuctionRule implements PricingRule {
     name = "Auction";
-    gamepadBinding: GamepadBinding = (gamepad, game, player) => {
-        // TODO: Gamepad binding of auction rule
-        return [];
-    };
 
     minBid: number = 0;
     myBid: number = 0;
@@ -75,6 +72,7 @@ export class AuctionRule implements PricingRule {
     setLastBidder!: (bidder: number | undefined) => void;
 
     keyBinding = auctionKeyBinding(this);
+    gamepadBinding = auctionGamepadBinding(this);
 
     init(game: Game) {
         const root = ReactDOM.createRoot(document.getElementById("pricing-rule")!);
