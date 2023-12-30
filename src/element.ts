@@ -1,5 +1,5 @@
 import { threadId } from "worker_threads";
-import { GameDisplay } from "./game-display";
+import { Game } from "./game-display";
 import * as PIXI from "pixi.js";
 import { MapEditor } from "./map-editor";
 
@@ -10,7 +10,7 @@ const HP_BAR_HEIGHT = 5;        // The height of HP bar in pixels
 // when an element is outside the player's visible range, this filter is applied to make it invisible.
 export const ELEMENT_INVISIBLE_FILTER = new PIXI.AlphaFilter(0.0);
 
-export function constructInnerContainer(type: ElementData, width: number, height: number, parent: MapEditor | GameDisplay, bgColor?: PIXI.Color) {
+export function constructInnerContainer(type: ElementData, width: number, height: number, parent: MapEditor | Game, bgColor?: PIXI.Color) {
     const container = new PIXI.Container();
     for(const part of type.parts) {
         const sprite = new PIXI.Sprite(parent.textures.get(part.img));
@@ -57,7 +57,7 @@ export type ElementModelPart = {
 export class GameElement {
     // properties
     type: ElementData;
-    gameIn: GameDisplay;
+    gameIn: Game;
     x: number;
     y: number;
     rad: number;
@@ -73,7 +73,7 @@ export class GameElement {
     outerContainer: PIXI.Container;   // container that has not been rotated
     innerContainer: PIXI.Container;   // container that has been rotated
 
-    constructor(type: ElementData, gameIn: GameDisplay, x: number, y: number, rad?: number, width?: number, height?: number, bgColor?: PIXI.Color) {
+    constructor(type: ElementData, gameIn: Game, x: number, y: number, rad?: number, width?: number, height?: number, bgColor?: PIXI.Color) {
         this.type = type;
         this.gameIn = gameIn;
         this.x = x;

@@ -1,6 +1,6 @@
 'use client';
 
-import { GameDisplay } from '@/game-display';
+import { Game } from '@/game-display';
 import { PlayersPanel } from './players';
 import ErrorPanel from './error';
 import { useEffect, createContext, useState } from 'react';
@@ -8,10 +8,10 @@ import styles from '@/app/page.module.css';
 import { EndEvent } from '@/event';
 import GameEndPanel from './game-end';
 
-export const GameContext = createContext<GameDisplay | undefined>(undefined);
+export const GameContext = createContext<Game | undefined>(undefined);
 export const ErrorContext = createContext<string[] | undefined>(undefined);
 
-export default function GameScene({ game }: { game: GameDisplay }) {
+export default function GameScene({ game }: { game: Game }) {
     const [error, setError] = useState<string[]>();
     const [gameEnd, setGameEnd] = useState<EndEvent>();
     useEffect(() => {

@@ -3,11 +3,11 @@
  */
 
 import { createElement } from "react";
-import { GamepadBinding, KeyBinding } from "./input";
+import { GamepadBinding, KeyBinding, KeyMap } from "./input";
 import TextBox from "@/components/text-box";
 import { ElementData, ElementModelPart } from "./element";
 import { EventEntry, GAME_EVENTS, GameEvent, InitEvent } from "./event";
-import { GameDisplay, GameMode, ObserverMode, PlayerMode, ReplayMode } from "./game-display";
+import { Game, GameMode, ObserverMode, PlayerMode, ReplayMode } from "./game-display";
 import { Task, Tasker } from "./utils/tasker";
 import * as PIXI from "pixi.js";
 import ReactDOM from "react-dom/client";
@@ -23,6 +23,8 @@ export interface LoadRealTime {
     readonly kind: "RealTime";
     host: string;
     port?: number;
+    keyBinding: KeyBinding[];
+    gamepadBinding: GamepadBinding[];
 };
 
 export type LoaderMode = LoadReplay | LoadRealTime;
@@ -30,8 +32,6 @@ export type LoaderMode = LoadReplay | LoadRealTime;
 export const DEFAULT_UI_ICON_LOCATION = "/resource/ui-icon.json";
 export const DEFAULT_ELEMENT_DATA_LOCATION = "/resource/element-data.json";
 export const DEFAULT_TEXTURES_LOCATION = "/resource/textures.json";
-export const DEFAULT_KEY_BINDING_LOCATION = "/resource/key-binding.json";
-export const DEFAULT_GAMEPAD_BINDING_LOCATION = "/resource/gamepad-binding-1.json";
 
 /**
  * Options for loading the game.
@@ -43,8 +43,6 @@ export type LoadOptions = {
     boot?: {
         elementData?: string,
         textures?: string,
-        keyBinding?: string,
-        gamepadBinding?: string,
     },
     socketTimeout: number;  // Timeout of the web socket (in miliseconds).
                             // If the connection to server is not established within the timeout, it will throw an error.
@@ -147,7 +145,7 @@ export function load(options: LoadOptions) {
                 }
             };
 
-            const initGameDisplay: Task<GameDisplay> = {
+            const initGameDisplay: Task<Game> = {
                 // initialize the game display with the loaded data
                 prerequisite: ["load element data", "load textures", "load replay file"],
                 callback: async (
@@ -162,7 +160,7 @@ export function load(options: LoadOptions) {
                         antialias: true,
                     });
                     const mode: ReplayMode = { kind: "Replay", events: replay };
-                    const game = new GameDisplay(app, textures, elemData, {
+                    const game = new Game(app, textures, elemData, {
                         mode,
                         pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, `Invalid pricing rule: ${initEvent.pricingRule}`),
                         displayHP: options.displayHP,
@@ -185,25 +183,6 @@ export function load(options: LoadOptions) {
         case "RealTime": {
             /*** Real-Time Playing Mode ****/
             const realTimeMode = options.mode;
-            const loadBinding: Task<[KeyBinding, GamepadBinding]> = {
-                // load key binding from file
-                prerequisite: [],
-                callback: async () => {
-                    const keyData = await (await fetch(options.boot?.keyBinding ?? DEFAULT_KEY_BINDING_LOCATION)).json();
-                    const gamepadData = await (await fetch(options.boot?.gamepadBinding ?? DEFAULT_GAMEPAD_BINDING_LOCATION)).json();
-                    function parseIntMap<T>(obj: { [key: string]: T }): Map<number, T> {
-                        return new Map(Object.entries(obj).map(([k, v]) => [parseInt(k), v]));
-                    }
-                    return [
-                        new Map(Object.entries(keyData)) as KeyBinding,
-                        {
-                            "mode": gamepadData.mode,
-                            "buttons": parseIntMap(gamepadData.buttons),
-                            "axes": parseIntMap(gamepadData.axes)
-                        } as GamepadBinding
-                    ];
-                }
-            };
             const acquireName: Task<string> = {
                 // acquire name from user
                 prerequisite: [],
@@ -225,19 +204,17 @@ export function load(options: LoadOptions) {
                     });
                 }
             }
-            const initGameDisplay: Task<GameDisplay> = {
+            const initGameDisplay: Task<Game> = {
                 // initialize the game display with the loaded data
                 prerequisite: [
                     "load element data",
                     "load textures",
-                    "load bindings",
                     "acquire name",
                     "acquire port number"
                 ],
                 callback: (
                     elemData: Map<string, ElementData>,
                     textures: Map<string, PIXI.Texture>,
-                    [keyBinding, gamepadBinding]: [KeyBinding, GamepadBinding],
                     name: string,
                     port: number,
                 ) => {
@@ -250,16 +227,24 @@ export function load(options: LoadOptions) {
                             backgroundColor: 0x000000,
                             antialias: true,
                         });
-                        // if the name is left blank, automatically enter observer mode
-                        // otherwise, enter real-time playing mode
-                        const mode: PlayerMode | ObserverMode = (name != "") ?
-                            { kind: "RealTime", socket, keyBinding, gamepadBinding, name } :
-                            { kind: "Observer", socket };
                         socket.onmessage = msg => {
                             const initEvent = JSON.parse(msg.data) as InitEvent;
-                            const game = new GameDisplay(app, textures, elemData, {
+                            const pricingRule = strictField(PRICING_RULES, initEvent.pricingRule, `Invalid pricing rule: ${initEvent.pricingRule}`);
+                            // add the pricing rule's key binding and gamepad binding to the list of all key & gamepad bindings
+                            if(pricingRule.keyBinding !== undefined) {
+                                realTimeMode.keyBinding.push(pricingRule.keyBinding);
+                            }
+                            if(pricingRule.gamepadBinding !== undefined) {
+                                realTimeMode.gamepadBinding.push(pricingRule.gamepadBinding);
+                            }
+                            // if the name is left blank, automatically enter observer mode
+                            // otherwise, enter real-time playing mode
+                            const mode: PlayerMode | ObserverMode = (name != "") ?
+                                { kind: "RealTime", socket, keyBinding: realTimeMode.keyBinding, gamepadBindings: realTimeMode.gamepadBinding, name } :
+                                { kind: "Observer", socket };
+                            const game = new Game(app, textures, elemData, {
                                 mode,
-                                pricingRule: strictField(PRICING_RULES, initEvent.pricingRule, `Invalid pricing rule: ${initEvent.pricingRule}`),
+                                pricingRule,
                                 displayHP: options.displayHP,
                                 displayVisionCirc: options.displayVisionCirc,
                                 displayDebugStr: options.displayDebugStr,
@@ -280,7 +265,6 @@ export function load(options: LoadOptions) {
             return new Tasker({
                 "load element data": loadElemData,
                 "load textures": loadTextures,
-                "load bindings": loadBinding,
                 "acquire name": acquireName,
                 "acquire port number": acquirePortNum,
                 "initialize game": initGameDisplay

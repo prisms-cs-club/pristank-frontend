@@ -1,9 +1,11 @@
 import { GameElement } from './element';
-import { GameDisplay } from './game-display';
+import { Game } from './game-display';
+import { KeyMap } from './input';
 import { PlayerElement, PlayerState, assignColor } from './player';
 import { assertDef } from './utils/other';
+import { sendAllCommands } from './utils/socket';
 
-export type EventBody = (game: GameDisplay, param: EventEntry) => void;
+export type EventBody = (game: Game, param: EventEntry) => void;
 
 /**
  * Game event class. Each event is defined with its event type, timestamp when the event occurs,
@@ -78,12 +80,10 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                 GAME_EVENTS.PlrUpd(game, param.plr);    // pass the `plr` parameter to player update event handler
             }
             if(game.options.mode.kind == "RealTime") {
-                // if the game is in real-time mode and this player is the current player, set the visibility of all elements
-                if(elem.name == game.options.mode.name) {
-                    game.options.mode.myUID = param.uid;
-                    game.options.mode.myPlayer = elem;
-                    game.setPlayers([elem]);
-                    game.updateVisibility(elem, elem.visionRadius);
+                const mode = game.options.mode;
+                // if the game is in real-time mode and this player is the current player this GUI is controlling,
+                if(elem.name == mode.name) {
+                    game.onThisPlayerAdded(elem, param.uid);
                 }
             } else {
                 game.setPlayers(Array.from(game.players.values()));

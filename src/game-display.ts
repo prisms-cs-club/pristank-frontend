@@ -3,9 +3,10 @@ import { ElementData, GameElement } from "./element";
 import { EndEvent, EventEntry, GAME_EVENTS, GameEvent, InitEvent } from "./event";
 import * as PIXI from "pixi.js";
 import { PlayerElement, PlayerState } from "./player";
-import { GamepadBinding, KeyBinding, actions, gamepadLoop, keyDownEvent, keyUpEvent } from "./input";
 import { Queue } from "@datastructures-js/queue";
 import { PricingRule } from "./market";
+import { GamepadBinding, KeyBinding, KeyMap } from "./input";
+import { sendAllCommands } from "./utils/socket";
 
 export interface ReplayMode {
     readonly kind: "Replay";
@@ -15,8 +16,9 @@ export interface ReplayMode {
 export interface PlayerMode {
     readonly kind: "RealTime";
     socket: WebSocket;
-    keyBinding: KeyBinding;
-    gamepadBinding: GamepadBinding;
+    keyBinding: KeyBinding[];
+    keymap?: KeyMap;
+    gamepadBindings: GamepadBinding[];
     name: string;
     myUID?: number;                 // UID of the tank controlled by the player
     myPlayer?: PlayerElement;       // The tank controlled by the player
@@ -42,7 +44,7 @@ export type GameOptions = {
  * The game. This class is responsible for rendering the game screen, processing events, and
  * maintaining the game state.
  */
-export class GameDisplay {
+export class Game {
     options: GameOptions;                  // TODO: a better design
     app: PIXI.Application;
     gamepadID?: number;                    // ID of the first gamepad connected, if any.
@@ -82,7 +84,7 @@ export class GameDisplay {
     
         // initialize ticker
         this.app.ticker.autoStart = false;
-        this.app.ticker.add(_ => GameDisplay.gameLoop(this));
+        this.app.ticker.add(_ => Game.gameLoop(this));
 
         if(options.mode.kind == "RealTime" || options.mode.kind == "Observer") {
             const socket = options.mode.socket!;
@@ -99,11 +101,7 @@ export class GameDisplay {
                 this.errorCallback?.(["WebSocket was closed before game ends."]);
             }
             if(options.mode.kind == "RealTime") {
-                const mode = options.mode;
-                const binding = options.mode.keyBinding!;
-                // add event listeners to keys and gamepads
-                window.addEventListener("keydown", keyDownEvent(this, mode, binding));
-                window.addEventListener("keyup", keyUpEvent(this, mode, binding));
+                // add listeners to gamepads
                 window.addEventListener("gamepadconnected", event => {
                     console.log(`gamepad ${event.gamepad.id} connected`);
                     this.gamepadID = event.gamepad.index;
@@ -118,12 +116,41 @@ export class GameDisplay {
         }
     }
 
-    static gameLoop(game: GameDisplay) {
+    /**
+     * When the player controlled by this GUI is added to the game, this function is called.
+     * 
+     * This function will initialize relevant properties of the game, such as the player list,
+     * keymap, etc.
+     * @param player The added player.
+     * @param uid The UID of this player.
+     */
+    onThisPlayerAdded(player: PlayerElement, uid: number) {
+        const mode = this.options.mode as PlayerMode;
+        // assign the player's UID and the player object to the game
+        mode.myUID = uid;
+        mode.myPlayer = player;
+        this.setPlayers([player]);
+        // then, set the visibility of all elements
+        this.updateVisibility(player, player.visionRadius);
+        // create the key map and add all bindings to the map
+        mode.keymap = new KeyMap();
+        for(const binding of mode.keyBinding) {
+            binding(mode.keymap!, this, mode.myPlayer!);
+        }
+        // add event listeners to keys and gamepads
+        window.addEventListener("keydown", e => sendAllCommands(mode.keymap!.onKeyDown(e.code), mode.socket, this.timer));
+        window.addEventListener("keyup", e => sendAllCommands(mode.keymap!.onKeyUp(e.code), mode.socket, this.timer));
+    }
+
+    static gameLoop(game: Game) {
         try {
             game.updateAt(game.timer);
             if(game.options.mode.kind == "RealTime" && game.gamepadID != undefined) {
                 // if any game pad is connected, use it to control the tank
-                gamepadLoop(game, game.options.mode, navigator.getGamepads()[game.gamepadID]!);
+                const gamepad = navigator.getGamepads()[game.gamepadID]!;
+                const mode = game.options.mode;
+                const commands = mode.gamepadBindings.map(binding => binding(gamepad, game, mode.myPlayer!)).flat();
+                sendAllCommands(commands, mode.socket, game.timer);
             }
             game.timer += game.app.ticker.elapsedMS;
         } catch(e) {

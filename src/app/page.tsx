@@ -4,7 +4,7 @@ import LoadingScene from '@/components/loading-scene';
 import GameScene from '@/components/game-scene';
 import { LoadOptions, LoadRealTime, LoadReplay, load } from '@/boot';
 import { useEffect, useRef, useState } from 'react';
-import { GameDisplay } from '@/game-display';
+import { Game } from '@/game-display';
 import { Tasker } from '@/utils/tasker';
 
 const mode
@@ -15,6 +15,8 @@ const mode
     : LoadRealTime = {
     kind: "RealTime",
     host: "localhost",
+    keyBinding: [require("@/bindings/key-movement-binding").keyBinding, require("@/bindings/key-fire-binding").keyBinding],
+    gamepadBinding: [require("@/bindings/gamepad-binding-1").gamepadBinding],
 };
 
 const options: LoadOptions = {
@@ -26,7 +28,7 @@ const options: LoadOptions = {
 };
 
 export default function Home() {
-    const [game, setGame] = useState<GameDisplay>();
+    const [game, setGame] = useState<Game>();
     const [tasker, _] = useState<Tasker>(load(options));
     return (
         <main>

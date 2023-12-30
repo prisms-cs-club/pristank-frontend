@@ -1,8 +1,10 @@
 import ReactDOM from "react-dom/client";
 import AuctionRulePanel from "./components/auction-rule";
-import { GameDisplay } from "./game-display";
+import { Game } from "./game-display";
 import { EventEntry } from "./event";
-import { GamepadBinding } from "./input";
+import { GamepadBinding, KeyBinding } from "./input";
+import { sendCommand } from "./utils/socket";
+import auctionKeyBinding from "./bindings/key-auction-binding";
 
 /**
  * Helper function. This function is for displaying the time left for auction.
@@ -33,27 +35,21 @@ export interface PricingRule {
      */
     name: string;
 
+    keyBinding?: KeyBinding;
+    gamepadBinding?: GamepadBinding;
+
     /**
      * Initialize the pricing rule. This includes set up the UI and other necessary initializations.
      * @param game The game
      */
-    init: (game: GameDisplay) => void;
-
-    /**
-     * Modify the gamepad binding based on the pricing rule (optional).
-     * 
-     * If the pricing rule requires more types of actions from the user, this allows the
-     * designer of pricing rule to be able to add new bindings to the gamepad.
-     * @param binding Gamepad binding to be modified
-     */
-    modifyGamepadBinding?: (binding: GamepadBinding) => void;
+    init: (game: Game) => void;
 
     /**
      * Process an incoming `Market Update` event based on the pricing rule.
      * @param game The game
      * @param event The event to be processed
      */
-    processEvent: (game: GameDisplay, event: EventEntry) => void;
+    processEvent: (game: Game, event: EventEntry) => void;
 };
 
 export class NoneRule implements PricingRule {
@@ -64,23 +60,31 @@ export class NoneRule implements PricingRule {
 
 export class AuctionRule implements PricingRule {
     name = "Auction";
+    gamepadBinding: GamepadBinding = (gamepad, game, player) => {
+        // TODO: Gamepad binding of auction rule
+        return [];
+    };
+
+    minBid: number = 0;
+    myBid: number = 0;
+
     setSelling!: (selling: string | undefined) => void;
+    setBid!: (bid: number) => void;
     setMinBid!: (minBid: number) => void;
     setDuration!: (duration: number | undefined) => void;            // This `duration` is in seconds.
     setLastBidder!: (bidder: number | undefined) => void;
 
-    init(game: GameDisplay) {
+    keyBinding = auctionKeyBinding(this);
+
+    init(game: Game) {
         const root = ReactDOM.createRoot(document.getElementById("pricing-rule")!);
         root.render(
             <AuctionRulePanel rule={this} game={game}></AuctionRulePanel>
         );
     }
 
-    modifyGamepadBinding(binding: GamepadBinding) {
-        // TODO: add bid button and price axis
-    }
-
-    processEvent(game: GameDisplay, event: EventEntry) {
+    processEvent(game: Game, event: EventEntry) {
+        // The market update event of auction rule can be in 3 different forms:
         if(event.toSell != undefined) {
             // start of auction
             let toSellStr = "";
@@ -115,9 +119,9 @@ export class AuctionRule implements PricingRule {
      * @param game The game
      * @param amount The amount of money to bid
      */
-    bid(game: GameDisplay, amount: number) {
+    doBid(game: Game, amount: number) {
         if(game.options.mode.kind == "RealTime") {
-            game.options.mode.socket.send(`${game.timer} market.bid ${amount}`)
+            sendCommand(`market.bid ${amount}`, game.options.mode.socket, game.timer);
         }
     }
 }
