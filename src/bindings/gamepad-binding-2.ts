@@ -18,8 +18,8 @@ export const gamepadBinding: GamepadBinding = (gamepad, player) => {
     const leftTrackMul = axesCurve((dirX - dirY) * Math.SQRT1_2);
     const rightTrackMul = axesCurve((-dirX - dirY) * Math.SQRT1_2);
     const ans = [
-        `lTrack ${leftTrackMul * player.tankSpeed * speed}`,
-        `rTrack ${rightTrackMul * player.tankSpeed * speed}`
+        `lTrack ${(leftTrackMul * player.tankSpeed * speed).toFixed(3)}`,
+        `rTrack ${(rightTrackMul * player.tankSpeed * speed).toFixed(3)}`
     ];
     if(gamepad.buttons[FIRE_BUTTON].pressed) {
         ans.push("fire");

@@ -105,13 +105,23 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         if(elem instanceof PlayerElement) {
             game.getPlayer(param.uid)!.alive = false;  // Set the `alive` of this player to false
             if(game.options.mode.kind === "RealTime") {
-                if(param.uid === game.options.mode.myUID) {
-                    // If this player dies, output an error message and set all element to visible.
+                const mode = game.options.mode;
+                if(param.uid === mode.myUID) {
+                    // If this player dies, output an error message
                     game.errorCallback?.(["You died!"]);
+                    // send a vibration to the gamepad, if there is any
+                    if(game.gamepadID !== undefined) {
+                        navigator.getGamepads()[game.gamepadID]?.vibrationActuator?.playEffect("dual-rumble", {
+                            duration: 500,
+                            strongMagnitude: 1.0,
+                            weakMagnitude: 1.0
+                        });
+                    }
+                    // set all element to visible
                     game.makeAllVisible();
                 } else {
                     // If in real-time mode, only the current player's status is visible.
-                    game.setPlayers([game.options.mode.myPlayer!]);
+                    game.setPlayers([mode.myPlayer!]);
                 }
             } else {
                 // Otherwise, all players' status are visible.

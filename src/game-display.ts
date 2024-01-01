@@ -83,6 +83,7 @@ export class Game {
         this.errorCallback = errorCallback;
     
         // initialize ticker
+        this.app.ticker.speed = 0.5;
         this.app.ticker.autoStart = false;
         this.app.ticker.add(_ => Game.gameLoop(this));
 
@@ -137,7 +138,7 @@ export class Game {
         for(const binding of mode.keyBinding) {
             binding(mode.keymap!, mode.myPlayer!);
         }
-        // add event listeners to keys and gamepads
+        // add event listeners to keys
         window.addEventListener("keydown", e => sendAllCommands(mode.keymap!.onKeyDown(e.code), mode.socket, this.timer));
         window.addEventListener("keyup", e => sendAllCommands(mode.keymap!.onKeyUp(e.code), mode.socket, this.timer));
     }
@@ -146,11 +147,13 @@ export class Game {
         try {
             game.updateAt(game.timer);
             if(game.options.mode.kind == "RealTime" && game.gamepadID != undefined) {
-                // if any game pad is connected, use it to control the tank
                 const gamepad = navigator.getGamepads()[game.gamepadID]!;
                 const mode = game.options.mode;
-                const commands = mode.gamepadBindings.map(binding => binding(gamepad, mode.myPlayer!)).flat();
-                sendAllCommands(commands, mode.socket, game.timer);
+                if(mode.myPlayer !== undefined && gamepad !== undefined) {
+                    // if any game pad is connected, use it to control the tank
+                    const commands = mode.gamepadBindings.map(binding => binding(gamepad, mode.myPlayer!)).flat();
+                    sendAllCommands(commands, mode.socket, game.timer);
+                }
             }
             game.timer += game.app.ticker.elapsedMS;
         } catch(e) {

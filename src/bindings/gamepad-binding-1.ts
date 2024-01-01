@@ -11,8 +11,8 @@ export const gamepadBinding: GamepadBinding = (gamepad, player) => {
     const lTrackSpd = -player.tankSpeed * gamepad.axes[LEFT_TRACK_AXIS].valueOf();
     const rTrackSpd = -player.tankSpeed * gamepad.axes[RIGHT_TRACK_AXIS].valueOf();
     const commands = [
-        `lTrack ${lTrackSpd}`,
-        `rTrack ${rTrackSpd}`,
+        `lTrack ${lTrackSpd.toFixed(3)}`,
+        `rTrack ${rTrackSpd.toFixed(3)}`,
     ];
     if(gamepad.buttons[FIRE_BUTTON].pressed) {
         commands.push("fire");
