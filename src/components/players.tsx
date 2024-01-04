@@ -49,10 +49,15 @@ export function PlayersPanel() {
     const game = useContext(GameContext);
     const [players, setPlayers] = useState(Array.from(game!!.players.values()));
     useEffect(() => {
-        if(game != undefined) {
-            game.setPlayers = setPlayers;
+        if(game !== undefined) {
+            game.setDisplayedPlayers = setPlayers;
         }
     }, [game]);
+    useEffect(() => {
+        if(game !== undefined) {
+            game.displayedPlayers = players;
+        }
+    }, [game, players]);
     return (
             (players.length > 0)
                 ? <div className={styles["card"]}>

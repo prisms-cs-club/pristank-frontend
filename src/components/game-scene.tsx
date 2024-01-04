@@ -1,6 +1,6 @@
 'use client';
 
-import { Game } from '@/game-display';
+import { Game } from '@/game';
 import { PlayersPanel } from './players';
 import ErrorPanel from './error';
 import { useEffect, createContext, useState } from 'react';

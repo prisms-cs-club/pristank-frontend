@@ -1,4 +1,4 @@
-import { Game } from '@/game-display';
+import { Game } from '@/game';
 import { Tasker } from '@/utils/tasker';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { CompletedTask, ErrorTask, ExecutingTask } from './tasks';

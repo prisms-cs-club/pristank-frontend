@@ -1,7 +1,7 @@
 import styles from "@/app/page.module.css";
 import { AuctionRule } from "@/market";
 import { useEffect, useRef, useState } from "react";
-import { Game, PlayerMode } from "@/game-display";
+import { Game, PlayerMode } from "@/game";
 
 export default function AuctionRulePanel({rule, game}: { rule: AuctionRule, game: Game }) {
     const [selling, setSelling] = useState<string | undefined>();

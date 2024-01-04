@@ -1,5 +1,5 @@
 import { threadId } from "worker_threads";
-import { Game } from "./game-display";
+import { Game } from "./game";
 import * as PIXI from "pixi.js";
 import { MapEditor } from "./map-editor";
 

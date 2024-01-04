@@ -4,7 +4,7 @@ import LoadingScene from '@/components/loading-scene';
 import GameScene from '@/components/game-scene';
 import { LoadOptions, LoadRealTime, LoadReplay, load } from '@/boot';
 import { useEffect, useRef, useState } from 'react';
-import { Game } from '@/game-display';
+import { Game } from '@/game';
 import { Tasker } from '@/utils/tasker';
 
 const mode

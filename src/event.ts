@@ -1,5 +1,5 @@
 import { GameElement } from './element';
-import { Game } from './game-display';
+import { Game } from './game';
 import { KeyMap } from './input';
 import { PlayerElement, PlayerState, assignColor } from './player';
 import { assertDef } from './utils/other';
@@ -86,7 +86,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                     game.onThisPlayerAdded(elem, param.uid);
                 }
             } else {
-                game.setPlayers(Array.from(game.players.values()));
+                game.setDisplayedPlayers(Array.from(game.players.values()));
             }
         } else {
             // Other elements. Depending on the game mode and vision radius, some elements may be invisible.
@@ -121,11 +121,11 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                     game.makeAllVisible();
                 } else {
                     // If in real-time mode, only the current player's status is visible.
-                    game.setPlayers([mode.myPlayer!]);
+                    game.setDisplayedPlayers([mode.myPlayer!]);
                 }
             } else {
                 // Otherwise, all players' status are visible.
-                game.setPlayers(Array.from(game.players.values()));
+                game.setDisplayedPlayers(Array.from(game.players.values()));
             }
         }
     },

@@ -7,7 +7,7 @@ import { GamepadBinding, KeyBinding, KeyMap } from "./input";
 import TextBox from "@/components/text-box";
 import { ElementData, ElementModelPart } from "./element";
 import { EventEntry, GAME_EVENTS, GameEvent, InitEvent } from "./event";
-import { Game, GameMode, ObserverMode, PlayerMode, ReplayMode } from "./game-display";
+import { Game, GameMode, ObserverMode, PlayerMode, ReplayMode } from "./game";
 import { Task, Tasker } from "./utils/tasker";
 import * as PIXI from "pixi.js";
 import ReactDOM from "react-dom/client";

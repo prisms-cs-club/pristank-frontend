@@ -57,7 +57,9 @@ export class Game {
     elemList: Map<UID, GameElement>;      // Mapping from all element's UID to the element object.
     eventQueue: Queue<GameEvent>;         // Event queue. The event with the lowest timestamp will be processed first.
     players: Map<UID, PlayerElement>;     // Mapping from each player's UID to its element.
-    setPlayers!: (players: PlayerElement[]) => void;
+    
+    displayedPlayers!: PlayerElement[];
+    setDisplayedPlayers!: (players: PlayerElement[]) => void;
     gameEndCallback!: (event: EndEvent) => void;
     errorCallback?: (messages: string[]) => void; // If this function is called, the game will terminate immediately.
 
@@ -92,8 +94,10 @@ export class Game {
             // intiialize socket
             socket.onmessage = msgEvent => {
                 const data = JSON.parse(msgEvent.data) as EventEntry;
-                const event = new GameEvent(data.t, GAME_EVENTS[data.type], data);
-                this.eventQueue.enqueue(event);   // TODO: enqueue or evaluate now?
+                if(GAME_EVENTS[data.type] !== undefined) {
+                    const event = new GameEvent(data.t, GAME_EVENTS[data.type], data);
+                    this.eventQueue.enqueue(event);   // TODO: enqueue or evaluate now?
+                }
             };
             socket.onerror = errEvent => {
                 this.errorCallback?.(["An error occured with WebSocket.", `Error type: ${errEvent.type}`]);
@@ -130,7 +134,7 @@ export class Game {
         // assign the player's UID and the player object to the game
         mode.myUID = uid;
         mode.myPlayer = player;
-        this.setPlayers([player]);
+        this.setDisplayedPlayers([player]);
         // then, set the visibility of all elements
         this.updateVisibility(player, player.visionRadius);
         // create the key map and add all bindings to the map
@@ -286,6 +290,15 @@ export class Game {
         this.elemList.forEach((elem, uid) => {
             if(!(elem instanceof PlayerElement)) {
                 elem.updateVisibility(elem.getDistanceTo(player) <= radius);
+            } else if(this.options.mode.kind == "RealTime") {
+                const conditionA = (elem.getDistanceTo(player) <= radius);
+                const conditionB = this.displayedPlayers.includes(elem);
+                // if the tank is within the player's vision range, then show its full information in the left panel
+                if(conditionA && !conditionB) {
+                    this.setDisplayedPlayers([...this.displayedPlayers, elem]);
+                } else if(!conditionA && conditionB) {
+                    this.setDisplayedPlayers(this.displayedPlayers.filter(x => x !== elem));
+                }
             }
         });
     }

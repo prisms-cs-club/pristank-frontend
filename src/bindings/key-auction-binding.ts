@@ -1,4 +1,4 @@
-import { Game } from "@/game-display";
+import { Game } from "@/game";
 import { KeyBinding, KeyMap } from "@/input";
 import { AuctionRule } from "@/market";
 import { PlayerElement } from "@/player";

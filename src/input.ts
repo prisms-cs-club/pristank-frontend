@@ -1,4 +1,4 @@
-import { Game } from "./game-display";
+import { Game } from "./game";
 import { PlayerElement } from "./player";
 
 export class KeyMap {

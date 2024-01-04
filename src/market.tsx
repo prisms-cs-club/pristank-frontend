@@ -1,6 +1,6 @@
 import ReactDOM from "react-dom/client";
 import AuctionRulePanel from "./components/auction-rule";
-import { Game } from "./game-display";
+import { Game } from "./game";
 import { EventEntry } from "./event";
 import { GamepadBinding, KeyBinding } from "./input";
 import { sendCommand } from "./utils/socket";
