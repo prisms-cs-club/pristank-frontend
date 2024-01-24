@@ -53,12 +53,20 @@ export interface PricingRule {
     processEvent: (game: Game, event: EventEntry) => void;
 };
 
+/**
+ * No market rule.
+ */
 export class NoneRule implements PricingRule {
     name = "None";
     init() {}
     processEvent() {}
 }
 
+/**
+ * Auction rule:
+ * - The game will select random upgrades to sell.
+ * - Player who give the largest bid will get the upgrade.
+ */
 export class AuctionRule implements PricingRule {
     name = "Auction";
 
@@ -124,6 +132,9 @@ export class AuctionRule implements PricingRule {
     }
 }
 
+/**
+ * All the pricing rules in a list.
+ */
 export const PRICING_RULES: { [key: string]: PricingRule } = {
     none: new NoneRule,
     auction: new AuctionRule,

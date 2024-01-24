@@ -85,7 +85,6 @@ export class Game {
         this.errorCallback = errorCallback;
     
         // initialize ticker
-        this.app.ticker.speed = 0.5;
         this.app.ticker.autoStart = false;
         this.app.ticker.add(_ => Game.gameLoop(this));
 
@@ -134,7 +133,6 @@ export class Game {
         // assign the player's UID and the player object to the game
         mode.myUID = uid;
         mode.myPlayer = player;
-        this.setDisplayedPlayers([player]);
         // then, set the visibility of all elements
         this.updateVisibility(player, player.visionRadius);
         // create the key map and add all bindings to the map
@@ -290,15 +288,6 @@ export class Game {
         this.elemList.forEach((elem, uid) => {
             if(!(elem instanceof PlayerElement)) {
                 elem.updateVisibility(elem.getDistanceTo(player) <= radius);
-            } else if(this.options.mode.kind == "RealTime") {
-                const conditionA = (elem.getDistanceTo(player) <= radius);
-                const conditionB = this.displayedPlayers.includes(elem);
-                // if the tank is within the player's vision range, then show its full information in the left panel
-                if(conditionA && !conditionB) {
-                    this.setDisplayedPlayers([...this.displayedPlayers, elem]);
-                } else if(!conditionA && conditionB) {
-                    this.setDisplayedPlayers(this.displayedPlayers.filter(x => x !== elem));
-                }
             }
         });
     }
