@@ -7,6 +7,7 @@ import { Queue } from "@datastructures-js/queue";
 import { PricingRule } from "./market";
 import { GamepadBinding, KeyBinding, KeyMap } from "./input";
 import { sendAllCommands } from "./utils/socket";
+import { Tile } from "./tile";
 
 export interface ReplayMode {
     readonly kind: "Replay";
@@ -46,13 +47,14 @@ export type GameOptions = {
  */
 export class Game {
     options: GameOptions;                  // TODO: a better design
-    app: PIXI.Application;
+    private app: PIXI.Application;
     gamepadID?: number;                    // ID of the first gamepad connected, if any.
     timer: number = 0;                     // Timer. This is set to 0 when the game starts.
     textures: Map<string, PIXI.Texture>;   // Collection of textures
     width: number;      // width in game unit (number of blocks)
     height: number;     // height in game unit (number of blocks)
     unitPixel: number;  // number of pixels per game unit
+    tiles: Tile[];      // Collection of tiles. Initialized when receiving the map creation event.
     elemData: Map<string, ElementData>;   // graphics data of each element, including its width, height, hp, etc.
     elemList: Map<UID, GameElement>;      // Mapping from all element's UID to the element object.
     eventQueue: Queue<GameEvent>;         // Event queue. The event with the lowest timestamp will be processed first.
@@ -78,6 +80,7 @@ export class Game {
         this.width = width ?? 0;
         this.height = height ?? 0;
         this.unitPixel = Math.min(this.app.renderer.width / this.width, this.app.renderer.height / this.height);
+        this.tiles = [];
         this.elemData = elemData;
         this.elemList = new Map();
         this.eventQueue = (options.mode.kind == "Replay") ? new Queue(options.mode.events) : new Queue();
@@ -177,11 +180,14 @@ export class Game {
     /**
      * This function is called when the window is resized. The function will resize game display,
      * recalculate the unitPixel, and update all elements' position.
-     * @param windowWidth new window width (in number of pixels)
-     * @param windowHeight new window height (in number of pixels)
+     * @param windowWidth new window width (in number of pixels). If left blank, use app.renderer.width.
+     * @param windowHeight new window height (in number of pixels). If left blank, use app.renderer.height.
      */
-    windowResize(windowWidth: number, windowHeight: number) {
-        this.unitPixel = Math.min(windowWidth / this.width, windowHeight / this.height);
+    windowRefresh(windowWidth?: number, windowHeight?: number) {
+        this.unitPixel = Math.min(
+            (windowWidth ?? this.app.renderer.width) / this.width,
+            (windowHeight ?? this.app.renderer.height) / this.height
+        );
         this.app.renderer.resize(this.width * this.unitPixel, this.height * this.unitPixel);
         this.render();
     }
@@ -290,5 +296,14 @@ export class Game {
                 elem.updateVisibility(elem.getDistanceTo(player) <= radius);
             }
         });
+    }
+
+    /**
+     * Add a new tile to the game. The tile should always be placed at the bottom layer.
+     * @param tile the tile to be added
+     */
+    addTile(tile: Tile) {
+        this.tiles.push(tile);
+        this.app.stage.addChildAt(tile.container, 0);
     }
 }

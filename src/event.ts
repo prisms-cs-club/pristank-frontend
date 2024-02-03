@@ -2,6 +2,7 @@ import { GameElement } from './element';
 import { Game } from './game';
 import { KeyMap } from './input';
 import { PlayerElement, PlayerState, assignColor } from './player';
+import { Tile } from './tile';
 import { assertDef } from './utils/other';
 import { sendAllCommands } from './utils/socket';
 
@@ -36,15 +37,22 @@ GameEvent.prototype.valueOf = function() {
 export const GAME_EVENTS: { [key: string]: EventBody } = {
     "MapCrt": (game, param) => {
         // Map Creation event
+        param = param as MapCreateEvent;
         // This is triggered when the map is created. Usually it is triggered only at the beginning of the game.
         game.width = param.x ?? game.width;
         game.height = param.y ?? game.height;
-        game.unitPixel = Math.min(game.app.renderer.width / game.width, game.app.renderer.height / game.height);
-        game.windowResize(game.app.renderer.width, game.app.renderer.height);
+        game.windowRefresh();
         const newMap = param.map;
         let uid = param.uid ?? 0;  // UID of the first non-empty block
         for(let j = 0; j < game.height; j++) {
             for(let i = 0; i < game.width; i++) {
+                // display the tile information on this position
+                const hpInc = param.incMap.hp[j * game.width + i];
+                const moneyInc = param.incMap.money[j * game.width + i];
+                if(hpInc > 0 || moneyInc > 0) {
+                    game.addTile(new Tile(hpInc, moneyInc, i, j, game.unitPixel));
+                }
+                // display the block on this position
                 if(newMap[j * game.width + i] && newMap[j * game.width + i] != "") {
                     // add a new block corresponding to the map
                     const type = game.elemData.get(newMap[j * game.width + i])!;
@@ -203,6 +211,18 @@ export type InitEvent = {
         // TODO: more
     }
 };
+
+export type MapCreateEvent = {
+    type: "MapCrt",
+    t: number,
+    x: number,
+    y: number,
+    map: string[],
+    incMap: {
+        hp: number[],
+        money: number[],
+    }
+}
 
 /**
  * Format of the ending event.

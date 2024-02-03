@@ -2,10 +2,12 @@ import { threadId } from "worker_threads";
 import { Game } from "./game";
 import * as PIXI from "pixi.js";
 import { MapEditor } from "./map-editor";
+import { textChangeRangeIsUnchanged } from "typescript";
 
-const HP_BAR_VERTICAL_BIAS = 5; // The vertical distance between the top of element and the bottom of HP bar in pixels
-const HP_BAR_WIDTH = 50;        // The width of HP bar in pixels
-const HP_BAR_HEIGHT = 5;        // The height of HP bar in pixels
+const HP_BAR_VERTICAL_BIAS = 5; // The vertical distance between the top of element and the bottom of HP bar (in pixels)
+const HP_BAR_WIDTH = 50;        // The width of HP bar (in pixels)
+const HP_BAR_HEIGHT = 5;        // The height of HP bar (in pixels)
+const HP_BAR_PADDING = 1;       // Padding (in pixels) between the HP bar and its background
 
 // when an element is outside the player's visible range, this filter is applied to make it invisible.
 export const ELEMENT_INVISIBLE_FILTER = new PIXI.AlphaFilter(0.0);
@@ -69,7 +71,7 @@ export class GameElement {
                                       // It should be guaranteed that if the element is invisible, it will not be displayed on the game canvas.
 
     // graphics elements
-    hpBar?: PIXI.Graphics;
+    hpBar?: PIXI.Graphics;            // the HP bar (if any), which changes color and length based on the HP over max HP ratio
     outerContainer: PIXI.Container;   // container that has not been rotated
     innerContainer: PIXI.Container;   // container that has been rotated
 
@@ -104,14 +106,29 @@ export class GameElement {
                 // HP bar is added to the outer container since it should not be rotated with the tank
                 this.outerContainer.addChild(this.hpBar);
             }
-            const hpRatio = this.hp / this.maxHp;
-            this.hpBar.clear();
-            this.hpBar.beginFill(new PIXI.Color([1 - hpRatio, hpRatio, 0]));
+            // draw a gray background box for the HP bar
             let topLeftY = -this.height * this.gameIn.unitPixel * 0.8 - HP_BAR_VERTICAL_BIAS;
             if(topLeftY + this.outerContainer.y <= 0) {
                 topLeftY = this.height * this.gameIn.unitPixel * 0.8 + HP_BAR_VERTICAL_BIAS;
             }
+            this.hpBar.clear();
+            // this.hpBar.beginFill(new PIXI.Color([0.5, 0.5, 0.5]));
+            this.hpBar.lineStyle(HP_BAR_PADDING * 2, new PIXI.Color([0.5, 0.5, 0.5]));
+            this.hpBar.drawRect(
+                -HP_BAR_WIDTH / 2 - HP_BAR_PADDING,
+                topLeftY - HP_BAR_PADDING,
+                HP_BAR_WIDTH + HP_BAR_PADDING * 2,
+                HP_BAR_HEIGHT + HP_BAR_PADDING * 2
+            );
+            // draw the HP bar
+            const hpRatio = this.hp / this.maxHp;
+            this.hpBar.lineStyle(0);
+            this.hpBar.beginFill(new PIXI.Color([Math.sqrt(1 - hpRatio), Math.sqrt(hpRatio), 0]));
             this.hpBar.drawRect(-HP_BAR_WIDTH / 2, topLeftY, HP_BAR_WIDTH * hpRatio, HP_BAR_HEIGHT);
+        } else if(this.hpBar !== undefined && this.hp == this.maxHp) {
+            // If the HP bar is full, then don't display it
+            this.outerContainer.removeChild(this.hpBar);
+            this.hpBar = undefined;
         }
     }
 

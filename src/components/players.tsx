@@ -17,7 +17,7 @@ export function PlayerPanel(props: { player: PlayerElement }) {
             <hr />
             <h2 style={{color: player.current.alive? player.current.color.toHex(): "gray"}}>{player.current.name}</h2>
             { player.current.alive &&
-                <table border={0}>
+                <table border={0} style={{width: '100%'}}>
                     {Object.entries(state)
                         .filter(value => value[0] != "maxHp" && value[0] != "debugString" && value[0] != "alive")
                         .map((value, index) => {
@@ -36,7 +36,7 @@ export function PlayerPanel(props: { player: PlayerElement }) {
                         })
                     }
                     {(state.debugString != undefined && player.current.gameIn.options.displayDebugStr) ?
-                        <tr><td rowSpan={2}><span className={styles["debug-string"]}>{state.debugString}</span></td></tr> :
+                        <tr><td colSpan={2}><span className={styles["debug-string"]}>{state.debugString}</span></td></tr> :
                         null}
                 </table>
             }
