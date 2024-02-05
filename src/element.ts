@@ -12,7 +12,7 @@ const HP_BAR_PADDING = 1;       // Padding (in pixels) between the HP bar and it
 // when an element is outside the player's visible range, this filter is applied to make it invisible.
 export const ELEMENT_INVISIBLE_FILTER = new PIXI.AlphaFilter(0.0);
 
-export function constructInnerContainer(type: ElementData, width: number, height: number, parent: MapEditor | Game, bgColor?: PIXI.Color) {
+export function constructInnerContainer(type: ElementData, width: number, height: number, parent: MapEditor | Game, bgColor?: PIXI.Color): PIXI.Container {
     const container = new PIXI.Container();
     for(const part of type.parts) {
         const sprite = new PIXI.Sprite(parent.textures.get(part.img));

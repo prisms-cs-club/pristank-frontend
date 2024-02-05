@@ -1,8 +1,11 @@
+import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
 import { ElementData, constructInnerContainer } from "./element";
-import { EventEntry } from "./event";
+import { EventEntry, MapCreateEvent } from "./event";
+import { Tile } from "./tile";
 import { Task, Tasker } from "./utils/tasker";
 import * as PIXI from "pixi.js";
 
+/// Tasks before starting the map editor ///
 const ELEMENT_DATA_LOCATION: string = "/resource/element-data.json";
 const TEXTURES_LOCATION: string = "/resource/textures.json";
 
@@ -50,6 +53,8 @@ export const loadMapEditor = new Tasker({
     "initialize": init,
 }, "initialize");
 
+/// Map Editor ///
+
 export const MAP_EDITOR_DEFAULT_WIDTH: number = 10;
 export const MAP_EDITOR_DEFAULT_HEIGHT: number = 10;
 
@@ -65,11 +70,12 @@ export class MapEditor {
     width: number = MAP_EDITOR_DEFAULT_WIDTH;
     height: number = MAP_EDITOR_DEFAULT_HEIGHT;
     unitPixel: number = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
-    blocks!: string[][];                           // Serial names of each block. `blocks[j][i]` is the block on jth row and ith colume.
+    blocks!: string[][];                           // Serial names of each block. `blocks[j][i]` is the block on jth row and ith column.
+    tiles!: Tile[][];                              // Tile properties of each block. Same format as `blocks`.
     blockImgs!: (PIXI.Container | undefined)[][];  // Images of each block on the canvas.
     
     // the following fields are modifiable by the UI
-    activateBlock: string = "";
+    activateBlock: string | undefined = undefined;
     symmetry: EditorSymmetry = "none";
     
     constructor(elements: Map<string, ElementData>, imagePath: Map<string, string>, textures: Map<string, PIXI.Texture>) {
@@ -90,8 +96,9 @@ export class MapEditor {
     private resize() {
         this.unitPixel = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
         this.app.renderer.resize(this.unitPixel * this.width, this.unitPixel * this.height);
+        // initialize blocks
         this.blocks = Array(this.height).fill(null).map(() => Array(this.width).fill(""));
-        if(this.blockImgs != undefined) {
+        if(this.blockImgs !== undefined) {
             for(const [i, row] of this.blockImgs.entries()) {
                 for(const [j, child] of row.entries()) {
                     if(child) {
@@ -100,6 +107,9 @@ export class MapEditor {
                 }
             }
         }
+        // initialize tiles
+        this.tiles = Array(this.height).fill(null).map((_, i) => Array(this.width).fill(null).map((_, j) => new Tile(0, 0, j, i, this.unitPixel)));
+        this.tiles.forEach(row => row.forEach(tile => this.app.stage.addChild(tile.container)));
         // add solid blocks on the boundary of map
         this.blockImgs = Array(this.height).fill(null).map((i, _) => Array(this.width).fill(undefined));
         for(let i = 0; i < this.height; i++) {
@@ -122,48 +132,84 @@ export class MapEditor {
         this.resize();
     }
 
-    replaceSingleTile(i: number, j: number, newName: string) {
-        this.blocks[i][j] = newName;
-        if(this.blockImgs[i][j]) {
-            this.app.stage.removeChild(this.blockImgs[i][j]!!);
+    /**
+     * Replace a single block on the map. This would not perform any symmetry.
+     * @param i column index
+     * @param j row index
+     * @param newName The name of new block to replace the original block. Can be left empty.
+     * @param newHpInc The new hp increment of the block. Can be left empty.
+     * @param newMoneyInc The new money increment of the block. Can be left empty.
+     */
+    replaceSingleTile(i: number, j: number, newName?: string, newHpInc?: number, newMoneyInc?: number) {
+        if(newName !== undefined) {
+            // update the block name
+            this.blocks[i][j] = newName;
+            if(this.blockImgs[i][j]) {
+                this.app.stage.removeChild(this.blockImgs[i][j]!);
+            }
+            if(newName == "") {
+                this.blockImgs[i][j] = undefined;
+            } else {
+                this.blockImgs[i][j] = constructInnerContainer(this.elements.get(newName)!, 1.0, 1.0, this);
+                this.blockImgs[i][j]!.x = (j + 0.5) * this.unitPixel;
+                this.blockImgs[i][j]!.y = (i + 0.5) * this.unitPixel;
+                this.app.stage.addChild(this.blockImgs[i][j]!);
+            }
         }
-        if(newName == "") {
-            this.blockImgs[i][j] = undefined;
-        } else {
-            this.blockImgs[i][j] = constructInnerContainer(this.elements.get(newName)!!, 1.0, 1.0, this);
-            this.blockImgs[i][j]!!.x = (j + 0.5) * this.unitPixel;
-            this.blockImgs[i][j]!!.y = (i + 0.5) * this.unitPixel;
-            this.app.stage.addChild(this.blockImgs[i][j]!!);
+        if(newHpInc !== undefined) {
+            // update the hp increment
+            this.tiles[i][j].hpRecover = newHpInc;
+        }
+        if(newMoneyInc !== undefined) {
+            // update the money increment
+            this.tiles[i][j].moneyRecover = newMoneyInc;
         }
     }
 
-    replaceTile(i: number, j: number, newName: string) {
-        this.replaceSingleTile(i, j, newName);
+    /**
+     * Replace a single block on the map. This would perform symmetry based on the selected symmetry rule.
+     * @param i column index
+     * @param j row index
+     * @param newName The name of new block to replace the original block. Can be left empty.
+     * @param newHpInc The new hp increment of the block. Can be left empty.
+     * @param newMoneyInc The new money increment of the block. Can be left empty.
+     */
+    replaceTile(i: number, j: number, newName?: string, newHpInc?: number, newMoneyInc?: number) {
+        this.replaceSingleTile(i, j, newName, newHpInc, newMoneyInc);
         switch(this.symmetry) {
             case "none":
                 break;
             case "horizontal":
-                this.replaceSingleTile(i, this.width - 1 - j, newName);
+                this.replaceSingleTile(i, this.width - 1 - j, newName, newHpInc, newMoneyInc);
                 break;
             case "vertical":
-                this.replaceSingleTile(this.height - 1 - i, j, newName);    
+                this.replaceSingleTile(this.height - 1 - i, j, newName, newHpInc, newMoneyInc);    
                 break;
             case "rotational":
-                this.replaceSingleTile(this.height - 1 - i, this.width - 1 - j, newName);
+                this.replaceSingleTile(this.height - 1 - i, this.width - 1 - j, newName, newHpInc, newMoneyInc);
                 break;
         }
     }
 
-    canvasOnClick(canvas: HTMLCanvasElement, e: MouseEvent) {
-        if(this.activateBlock != "") {
-            const rect = canvas.getBoundingClientRect();
-            const i = Math.floor((e.clientY - rect.top) / this.unitPixel);
-            const j = Math.floor((e.clientX - rect.left) / this.unitPixel);
-            if(e.ctrlKey || e.shiftKey) {
-                this.replaceTile(i, j, "");
-            } else {
-                this.replaceTile(i, j, this.activateBlock);
-            }
+    /**
+     * Handle clicking event on the canvas.
+     * @param canvas the canvas element
+     * @param e mouse event
+     */
+    canvasOnClick(canvas: HTMLCanvasElement, e: MouseEvent, hpIncrease?: number, moneyIncrease?: number) {
+        const rect = canvas.getBoundingClientRect();
+        const i = Math.floor((e.clientY - rect.top) / this.unitPixel);
+        const j = Math.floor((e.clientX - rect.left) / this.unitPixel);
+        if(e.ctrlKey || e.shiftKey) {
+            // If the user is holding the control key, remove the block.
+            // Remove the HP or money increase on the block based on the checkbox user selected.
+            const newHpIncrease = (hpIncrease !== undefined) ? 0 : undefined;
+            const newMoneyIncrease = (moneyIncrease !== undefined) ? 0 : undefined;
+            this.replaceTile(i, j, "", newHpIncrease, newMoneyIncrease);
+        } else {
+            // Otherwise, place the block.
+            // Place the HP or money increase on the block based on the checkbox user selected.
+            this.replaceTile(i, j, this.activateBlock, hpIncrease, moneyIncrease);
         }
     }
 
@@ -171,20 +217,22 @@ export class MapEditor {
      * Convert the blocks on the canvas into format of the "map creation" event.
      * @returns The event in JSON.
      */
-    getMapCrtEvent(): EventEntry {
-        const mapFlatten: string[] = [];
-        for(const row of this.blocks) {
-            for(const name of row) {
-                mapFlatten.push(name);
-            }
-        }
+    getMapCrtEvent(): MapCreateEvent {
+        const tilesFlat = this.tiles.flat();
+        const mapFlat: string[] = this.blocks.flat();
+        const hpIncFlat: number[] = tilesFlat.map(tile => tile.hpRecover);
+        const moneyIncFlat: number[] = tilesFlat.map(tile => tile.moneyRecover);
         return {
             "type": "MapCrt",
             "t": 0,
             "x": this.width,
             "y": this.height,
             "initUid": 0,
-            "map": mapFlatten,
+            "map": mapFlat,
+            "incMap": {
+                "hp": hpIncFlat,
+                "money": moneyIncFlat,
+            }
         }
     }
 }

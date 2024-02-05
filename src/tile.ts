@@ -6,15 +6,15 @@
 import * as PIXI from 'pixi.js';
 
 /**
- * 
+ * @param mask The mask to be drawn on
  * @param unitPixel number of pixels in a game unit
+ * @param color The color of the mask
  * @returns The mask for the upper half stripe of a tile
  */
-export function getTileUpperHalfMask(unitPixel: number, color: PIXI.Color): PIXI.Graphics {
+export function getTileUpperHalfMask(mask: PIXI.Graphics, unitPixel: number, color: PIXI.Color): PIXI.Graphics {
     const quarterUnit = 0.25 * unitPixel;
     const halfUnit = 0.5 * unitPixel;
     const threeQuarterUnit = 0.75 * unitPixel;
-    const mask = new PIXI.Graphics();
     mask.lineStyle(0);
     mask.beginFill(color);
     mask.drawPolygon([
@@ -44,11 +44,15 @@ export function getTileUpperHalfMask(unitPixel: number, color: PIXI.Color): PIXI
     return mask;
 }
 
-export function getLowerHalfMask(unitPixel: number, color: PIXI.Color): PIXI.Graphics {
+/**
+ * @param mask The mask to be drawn on
+ * @param unitPixel number of pixels in a game unit
+ * @param color The color of the mask
+ */
+export function getTileLowerHalfMask(mask: PIXI.Graphics, unitPixel: number, color: PIXI.Color): PIXI.Graphics {
     const quarterUnit = 0.25 * unitPixel;
     const halfUnit = 0.5 * unitPixel;
     const threeQuarterUnit = 0.75 * unitPixel;
-    const mask = new PIXI.Graphics();
     mask.lineStyle(0);
     mask.beginFill(color);
     mask.drawPolygon([
@@ -78,23 +82,53 @@ export function getLowerHalfMask(unitPixel: number, color: PIXI.Color): PIXI.Gra
     return mask;
 }
 
-const MAX_HP_RECOVER = 20;
-const MAX_MONEY_RECOVER = 20;
-const HP_COLOR = new PIXI.Color('#ffbcb6');
-const MONEY_COLOR = new PIXI.Color('#ffffb6');
+export const MAX_HP_RECOVER = 20;
+export const MAX_MONEY_RECOVER = 20;
+// export const HP_COLOR = '#ffbcc6';
+export const HP_COLOR = new Uint8Array([255, 188, 182]);
+// export const MONEY_COLOR = '#ffffb6';
+export const MONEY_COLOR = new Uint8Array([255, 255, 182]);
 
 export class Tile {
-    hpRecover: number;
-    moneyRecover: number;
+    private _hpRecover: number;
+    private _moneyRecover: number;
+    private _upperHalf: PIXI.Graphics;
+    private _lowerHalf: PIXI.Graphics;
     container: PIXI.Container;
+    unitPixel: number;
 
     constructor(hpRecover: number, moneyRecover: number, x: number, y: number, unitPixel: number) {
-        this.hpRecover = hpRecover;
-        this.moneyRecover = moneyRecover;
+        this._hpRecover = hpRecover;
+        this._moneyRecover = moneyRecover;
+        this.unitPixel = unitPixel;
         this.container = new PIXI.Container();
         this.container.x = x * unitPixel;
         this.container.y = y * unitPixel;
-        this.container.addChild(getTileUpperHalfMask(unitPixel, HP_COLOR.setAlpha(hpRecover / MAX_HP_RECOVER)));
-        this.container.addChild(getLowerHalfMask(unitPixel, MONEY_COLOR.setAlpha(moneyRecover / MAX_MONEY_RECOVER)));
+        this._upperHalf = new PIXI.Graphics();
+        getTileUpperHalfMask(this._upperHalf, unitPixel, new PIXI.Color(HP_COLOR).setAlpha(hpRecover / MAX_HP_RECOVER));
+        this.container.addChild(this._upperHalf);
+        this._lowerHalf = new PIXI.Graphics();
+        getTileLowerHalfMask(this._lowerHalf, unitPixel, new PIXI.Color(MONEY_COLOR).setAlpha(moneyRecover / MAX_MONEY_RECOVER));
+        this.container.addChild(this._lowerHalf);
+    }
+
+    set hpRecover(hpRecover: number) {
+        this._hpRecover = hpRecover;
+        this._upperHalf.clear();
+        getTileUpperHalfMask(this._upperHalf, this.unitPixel, new PIXI.Color(HP_COLOR).setAlpha(hpRecover / MAX_HP_RECOVER));
+    }
+
+    get hpRecover() {
+        return this._hpRecover;
+    }
+
+    set moneyRecover(moneyRecover: number) {
+        this._moneyRecover = moneyRecover;
+        this._lowerHalf.clear();
+        getTileLowerHalfMask(this._lowerHalf, this.unitPixel, new PIXI.Color(MONEY_COLOR).setAlpha(moneyRecover / MAX_MONEY_RECOVER));
+    }
+
+    get moneyRecover() {
+        return this._moneyRecover;
     }
 }

@@ -217,6 +217,7 @@ export type MapCreateEvent = {
     t: number,
     x: number,
     y: number,
+    initUid?: number,
     map: string[],
     incMap: {
         hp: number[],
