@@ -4,7 +4,7 @@ import { ElementData, GameElement } from "./element";
 import { PlayerElement } from "./player";
 import { Tile } from "./tile";
 import { PricingRule } from "./market";
-import { InitEvent } from "./event";
+import { EndEvent, InitEvent } from "./event";
 
 export type GameOptions = {
     displayHP: boolean;
@@ -16,7 +16,7 @@ export type GameOptions = {
 /**
  * Parent class of both `Game` and `Replay` classes. Handles the game elements, tiles, resources, UI, pricing rules, etc.
  */
-export class GameUI {
+export abstract class GameUI {
     app: PIXI.Application;
     options: GameOptions;
     textures: Map<string, PIXI.Texture>;   // Collection of textures
@@ -30,6 +30,9 @@ export class GameUI {
     pricingRule: PricingRule;
     timer: number = 0;  // current time in milliseconds
     setPlayers!: (players: PlayerElement[]) => void;
+    gameEndCallback!: (event: EndEvent) => void;
+
+    abstract pause(): void;
 
     constructor(
         app: PIXI.Application,

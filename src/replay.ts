@@ -1,7 +1,7 @@
 import { ElementData } from "./element";
 import { EventEntry, GAME_EVENTS, GameEvent, InitEvent } from "./event";
 import { PRICING_RULES, PricingRule } from "./market";
-import { strictField } from "./utils/other";
+import { sortByKey, strictField } from "./utils/other";
 import { Task, Tasker } from "./utils/tasker";
 import * as PIXI from "pixi.js";
 import config from "@/config.json";
@@ -27,15 +27,15 @@ export function loadReplay(replayFileDir: string, options: Omit<GameOptions, "de
         }
     }
 
-    const loadTextures: Task<[Map<string, string>, Map<string, PIXI.Texture>]> = {
+    const loadTextures: Task<Map<string, PIXI.Texture>> = {
         prerequisite: [],
         callback: async () => {
             const textures = new Map<string, PIXI.Texture>();
-            const textureNames = Object.entries(await (await fetch(config.path.texture)).json() as { [key: string]: string });
-            for(const [name, file] of textureNames) {
+            const textureNames = await (fetch(config.path.texture)).then(data => data.json());
+            for(const [name, file] of Object.entries(textureNames)) {
                 textures.set(name, PIXI.Texture.from(`/resource/texture/${file}`));
             }
-            return [new Map(textureNames), textures];
+            return textures;
         }
     }
 
@@ -84,7 +84,9 @@ export function loadReplay(replayFileDir: string, options: Omit<GameOptions, "de
 
 export class Replay extends GameUI {
     private eventList: GameEvent[];
+    private nextEventIdx: number = 0;
     playSpeed: number = 1;
+    setTimer!: (time: number) => void;
 
     constructor(
         app: PIXI.Application,
@@ -98,18 +100,34 @@ export class Replay extends GameUI {
     ) {
         super(app, options, textures, elemData, pricingRule, width, height);
         this.eventList = events;
+
+        sortByKey(this.eventList, e => e.t);
+        
+        // set up replay timer
+        this.app.ticker.autoStart = false;
+        this.app.ticker.add((delta) => {
+            this.setTimer(this.timer);
+            while(this.nextEventIdx < this.eventList.length && this.eventList[this.nextEventIdx].t <= this.timer) {
+                try {
+                    this.eventList[this.nextEventIdx].callback(this, this.eventList[this.nextEventIdx].params);
+                } catch(e) {
+                    console.error(`Error at event ${this.nextEventIdx}: ${e}`);
+                }
+                this.nextEventIdx++;
+            }
+            this.timer += this.app.ticker.elapsedMS * this.playSpeed;
+        });
     }
 
     play() {
-        // TODO
+        this.app.ticker.start();
     }
 
     pause() {
-        // TODO
+        this.app.ticker.stop();
     }
 
     adjustSpeed(speed: number) {
         this.playSpeed = speed;
-        // TODO
     }
 }

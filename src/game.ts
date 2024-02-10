@@ -37,7 +37,6 @@ export class Game extends GameUI {
     gamepadID?: number;                    // ID of the first gamepad connected, if any.
     eventQueue: Queue<GameEvent>;         // Event queue. The event with the lowest timestamp will be processed first.
 
-    gameEndCallback!: (event: EndEvent) => void;
     errorCallback?: (messages: string[]) => void; // If this function is called, the game will terminate immediately.
 
     constructor(

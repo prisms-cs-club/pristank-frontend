@@ -8,7 +8,6 @@ import styles from '@/app/page.module.css';
 import { EndEvent } from '@/event';
 import GameEndPanel from './game-end';
 
-export const GameContext = createContext<Game | undefined>(undefined);
 export const ErrorContext = createContext<string[] | undefined>(undefined);
 
 export default function GameScene({ game }: { game: Game }) {
@@ -25,20 +24,18 @@ export default function GameScene({ game }: { game: Game }) {
         // Other initializations of the game related to graphics should be put here.
     }, [game]);
     return <div id="root" className={styles["game-container"]}>
-        <GameContext.Provider value={game}>
-            <div className={styles["left-panel"]}>
-                <PlayersPanel parent={game}></PlayersPanel>
+        <div className={styles["left-panel"]}>
+            <PlayersPanel parent={game}></PlayersPanel>
+        </div>
+        <ErrorContext.Provider value={error}> 
+            { error && <ErrorPanel></ErrorPanel> }
+        </ErrorContext.Provider>
+        { gameEnd && <GameEndPanel parent={game} endEvent={gameEnd}></GameEndPanel> }
+        <div className={styles["right-panel"]}>
+            <div className={styles["card"]}>
+                <h2>Rule: {game.pricingRule.name}</h2>
             </div>
-            <ErrorContext.Provider value={error}> 
-                { error && <ErrorPanel></ErrorPanel> }
-            </ErrorContext.Provider>
-            { gameEnd && <GameEndPanel endEvent={gameEnd}></GameEndPanel> }
-            <div className={styles["right-panel"]}>
-                <div className={styles["card"]}>
-                    <h2>Rule: {game.pricingRule.name}</h2>
-                </div>
-                <div className={styles["card"]} id="pricing-rule"></div>
-            </div>
-        </GameContext.Provider>
+            <div className={styles["card"]} id="pricing-rule"></div>
+        </div>
     </div>
 }

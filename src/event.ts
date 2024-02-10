@@ -176,20 +176,16 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         }
     },
     "MktUpd": (game, param) => {
-        if(game instanceof Game) {
-            // Market Update event
-            // This is triggered when the market is updated.
-            // The specific behavior of this event depends on the pricing rule.
-            game.pricingRule.processEvent(game, param);
-        }
+        // Market Update event
+        // This is triggered when the market is updated.
+        // The specific behavior of this event depends on the pricing rule.
+        game.pricingRule.processEvent(game, param);
     },
     "End": (game, param) => {
-        if(game instanceof Game) {
-            // Game End event
-            // This is triggerd when the game ends.
-            game.gameEndCallback(param as EndEvent);
-            game.pause();
-        }
+        // Game End event
+        // This is triggerd when the game ends.
+        game.gameEndCallback(param as EndEvent);
+        game.pause();
     }
 };
 
