@@ -1,12 +1,13 @@
 import { GameElement } from './element';
 import { Game } from './game';
+import { GameUI } from './game-ui';
 import { KeyMap } from './input';
 import { PlayerElement, PlayerState, assignColor } from './player';
 import { Tile } from './tile';
 import { assertDef } from './utils/other';
 import { sendAllCommands } from './utils/socket';
 
-export type EventBody = (game: Game, param: EventEntry) => void;
+export type EventBody = (game: GameUI, param: EventEntry) => void;
 
 /**
  * Game event class. Each event is defined with its event type, timestamp when the event occurs,
@@ -57,7 +58,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                     // add a new block corresponding to the map
                     const type = game.elemData.get(newMap[j * game.width + i])!;
                     const elem = new GameElement(type, game, i + 0.5, game.height - j - 0.5, 0, 1, 1);
-                    if(game.options.mode.kind == "RealTime") {
+                    if(game instanceof Game && game.mode.kind == "RealTime") {
                         // For real-time mode, every block should be invisible at first.
                         // Otherwise the player can see the whole map at the beginning.
                         elem.updateVisibility(false);
@@ -88,9 +89,9 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                 GAME_EVENTS.PlrUpd(game, param.plr);    // pass the `plr` parameter to player update event handler
             }
             // Always display the information of all current players on the screen.
-            game.setDisplayedPlayers(Array.from(game.players.values()));
-            if(game.options.mode.kind == "RealTime") {
-                const mode = game.options.mode;
+            game.setPlayers(Array.from(game.players.values()));
+            if(game instanceof Game && game.mode.kind == "RealTime") {
+                const mode = game.mode;
                 // if the game is in real-time mode and this player is the current player this GUI is controlling,
                 if(elem.name == mode.name) {
                     game.onThisPlayerAdded(elem, param.uid);
@@ -99,8 +100,8 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         } else {
             // Other elements. Depending on the game mode and vision radius, some elements may be invisible.
             const elem = new GameElement(type, game, param.x, param.y, param.rad, param.width ?? type.width, param.height ?? type.height);
-            if(game.options.mode.kind == "RealTime" &&
-                (game.options.mode.myPlayer === undefined || elem.getDistanceTo(game.options.mode.myPlayer) > game.options.mode.myPlayer.visionRadius)) {
+            if(game instanceof Game && game.mode.kind == "RealTime" &&
+                (game.mode.myPlayer === undefined || elem.getDistanceTo(game.mode.myPlayer) > game.mode.myPlayer.visionRadius)) {
                 elem.updateVisibility(false);
             }
             game.addElement(param.uid, elem);
@@ -112,8 +113,8 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         const elem = game.removeElement(assertDef(param.uid, "Element remove event must have uid."));
         if(elem instanceof PlayerElement) {
             game.getPlayer(param.uid)!.alive = false;  // Set the `alive` of this player to false
-            if(game.options.mode.kind === "RealTime") {
-                const mode = game.options.mode;
+            if(game instanceof Game && game.mode.kind === "RealTime") {
+                const mode = game.mode;
                 if(param.uid === mode.myUID) {
                     // If this player dies, output an error message
                     game.errorCallback?.(["You died!"]);
@@ -130,7 +131,7 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
                 }
             }
             // display the information of all current players on the screen
-            game.setDisplayedPlayers(Array.from(game.players.values()));
+            game.setPlayers(Array.from(game.players.values()));
         }
     },
     "EleUpd": (game, param) => {
@@ -143,13 +144,13 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             elem.rad = param.rad ?? elem.rad;
             elem.hp = param.hp ?? elem.hp;
             elem.update();
-            if(game.options.mode.kind === "RealTime" && game.options.mode.myPlayer != undefined) {
-                const player = game.options.mode.myPlayer;
+            if(game instanceof Game && game.mode.kind === "RealTime" && game.mode.myPlayer != undefined) {
+                const player = game.mode.myPlayer;
                 // If the current player's status is updated, update the visibility of elements around this player.
                 if(elem == player) {
-                    game.updateVisibility(elem as PlayerElement, game.options.mode.myPlayer.visionRadius);
+                    game.updateVisibility(elem as PlayerElement, game.mode.myPlayer.visionRadius);
                 } else if(!(elem instanceof PlayerElement)) {
-                    elem.updateVisibility(elem.getDistanceTo(player) <= game.options.mode.myPlayer.visionRadius);
+                    elem.updateVisibility(elem.getDistanceTo(player) <= game.mode.myPlayer.visionRadius);
                 }
             }
         }
@@ -166,8 +167,8 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
             elem.debugStr = param.dbgStr ?? elem.debugStr;
             // TODO: support other properties that is able to update
             elem.update();
-            if(game.options.mode.kind === "RealTime" && game.options.mode.myUID != undefined && param.uid == game.options.mode.myUID) {
-                const mode = game.options.mode;
+            if(game instanceof Game && game.mode.kind === "RealTime" && game.mode.myUID != undefined && param.uid == game.mode.myUID) {
+                const mode = game.mode;
                 // Properties of the player controlled by this program is updated in real-time mode.
                 // Therefore, update the visibility of elements around this player.
                 game.updateVisibility(elem as PlayerElement, mode.myPlayer!.visionRadius);
@@ -175,16 +176,20 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         }
     },
     "MktUpd": (game, param) => {
-        // Market Update event
-        // This is triggered when the market is updated.
-        // The specific behavior of this event depends on the pricing rule.
-        game.options.pricingRule.processEvent(game, param);
+        if(game instanceof Game) {
+            // Market Update event
+            // This is triggered when the market is updated.
+            // The specific behavior of this event depends on the pricing rule.
+            game.pricingRule.processEvent(game, param);
+        }
     },
     "End": (game, param) => {
-        // Game End event
-        // This is triggerd when the game ends.
-        game.gameEndCallback(param as EndEvent);
-        game.pause();
+        if(game instanceof Game) {
+            // Game End event
+            // This is triggerd when the game ends.
+            game.gameEndCallback(param as EndEvent);
+            game.pause();
+        }
     }
 };
 

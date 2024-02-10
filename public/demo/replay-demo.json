@@ -20,7 +20,25 @@
             "SldBlk", null,     "BrkBlk", null,     "BrkBlk", null,     "SldBlk",
             "SldBlk", null,     "BrkBlk", null,     null,     null,     "SldBlk",
             "SldBlk", "SldBlk", "SldBlk", "SldBlk", "SldBlk", "SldBlk", "SldBlk"
-        ]
+        ],
+        "incMap": {
+            "hp": [
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+            ],
+            "money": [
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+            ]
+        }
     },
     {
         "type": "EleCrt","t": 1000,

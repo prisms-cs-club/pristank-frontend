@@ -2,6 +2,7 @@ import * as PIXI from "pixi.js";
 import { ElementData, GameElement } from "./element";
 import { HSVtoRGB } from "./utils/color";
 import { Game } from "./game";
+import { GameUI } from "./game-ui";
 
 /**
  * This list stores the first few colors that will be assigned to players.
@@ -60,7 +61,7 @@ export class PlayerElement extends GameElement {
 
     constructor(
         type: ElementData,
-        gameIn: Game,
+        gameIn: GameUI,
         x: number,
         y: number,
         name: string,

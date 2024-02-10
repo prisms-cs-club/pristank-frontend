@@ -15,18 +15,19 @@ export default function GameScene({ game }: { game: Game }) {
     const [error, setError] = useState<string[]>();
     const [gameEnd, setGameEnd] = useState<EndEvent>();
     useEffect(() => {
-        (game.app.view as unknown as HTMLElement).classList.add(styles["game-canvas"])  // TODO: unsafe
-        document.getElementsByClassName(styles["game-container"])[0].appendChild(game.app.view as unknown as HTMLElement);
+        const canvas = game.app.view as unknown as HTMLElement;
+        canvas.classList.add(styles["game-canvas"])  // TODO: unsafe
+        document.getElementsByClassName(styles["game-container"])[0].appendChild(canvas);
         game.errorCallback = setError;
         game.gameEndCallback = setGameEnd;
         game.start();
-        game.options.pricingRule.init(game);  // init pricing rules
+        game.pricingRule.init(game);  // init pricing rules
         // Other initializations of the game related to graphics should be put here.
     }, [game]);
     return <div id="root" className={styles["game-container"]}>
         <GameContext.Provider value={game}>
             <div className={styles["left-panel"]}>
-                <PlayersPanel></PlayersPanel>
+                <PlayersPanel parent={game}></PlayersPanel>
             </div>
             <ErrorContext.Provider value={error}> 
                 { error && <ErrorPanel></ErrorPanel> }
@@ -34,7 +35,7 @@ export default function GameScene({ game }: { game: Game }) {
             { gameEnd && <GameEndPanel endEvent={gameEnd}></GameEndPanel> }
             <div className={styles["right-panel"]}>
                 <div className={styles["card"]}>
-                    <h2>Rule: {game.options.pricingRule.name}</h2>
+                    <h2>Rule: {game.pricingRule.name}</h2>
                 </div>
                 <div className={styles["card"]} id="pricing-rule"></div>
             </div>

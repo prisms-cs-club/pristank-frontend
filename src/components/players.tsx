@@ -5,6 +5,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import styles from "@/app/page.module.css";
 import { GameContext } from "./game-scene";
 import PropIcon from "./icon";
+import { GameUI } from "@/game-ui";
 
 export function PlayerPanel(props: { player: PlayerElement }) {
     const player = useRef(props.player);
@@ -45,19 +46,11 @@ export function PlayerPanel(props: { player: PlayerElement }) {
     )
 }
 
-export function PlayersPanel() {
-    const game = useContext(GameContext);
-    const [players, setPlayers] = useState(Array.from(game!!.players.values()));
+export function PlayersPanel({ parent }: { parent: GameUI }) {
+    const [players, setPlayers] = useState(Array.from(parent!.players.values()));
     useEffect(() => {
-        if(game !== undefined) {
-            game.setDisplayedPlayers = setPlayers;
-        }
-    }, [game]);
-    useEffect(() => {
-        if(game !== undefined) {
-            game.displayedPlayers = players;
-        }
-    }, [game, players]);
+        parent.setPlayers = setPlayers;
+    }, [parent]);
     return (
             (players.length > 0)
                 ? <div className={styles["card"]}>

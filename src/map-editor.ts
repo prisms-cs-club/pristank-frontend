@@ -3,16 +3,14 @@ import { ElementData, constructInnerContainer } from "./element";
 import { EventEntry, MapCreateEvent } from "./event";
 import { Tile } from "./tile";
 import { Task, Tasker } from "./utils/tasker";
+import config from "@/config.json";
 import * as PIXI from "pixi.js";
 
 /// Tasks before starting the map editor ///
-const ELEMENT_DATA_LOCATION: string = "/resource/element-data.json";
-const TEXTURES_LOCATION: string = "/resource/textures.json";
-
 const loadBlockData: Task<Map<string, ElementData>> = {
     prerequisite: [],
     callback: async () => {
-        const data = await fetch(ELEMENT_DATA_LOCATION).then(data => data.json()) as { [key: string]: ElementData };
+        const data = await fetch(config.path.elementData).then(data => data.json()) as { [key: string]: ElementData };
         for(const [_, entry] of Object.entries(data)) {
             // fill out the default values
             for(const part of entry.parts) {
@@ -31,7 +29,7 @@ const loadTextures: Task<[Map<string, string>, Map<string, PIXI.Texture>]> = {
     prerequisite: [],
     callback: async () => {
         const textures = new Map<string, PIXI.Texture>();
-        const textureNames = Object.entries(await (await fetch(TEXTURES_LOCATION)).json() as { [key: string]: string });
+        const textureNames = Object.entries(await (await fetch(config.path.texture)).json() as { [key: string]: string });
         for(const [name, file] of textureNames) {
             textures.set(name, PIXI.Texture.from(`/resource/texture/${file}`));
         }
@@ -108,6 +106,10 @@ export class MapEditor {
             }
         }
         // initialize tiles
+        if(this.tiles !== undefined) {
+            this.tiles.forEach(row => row.forEach(tile => this.app.stage.removeChild(tile.container))); // remove all previous tiles
+        }
+        // TODO: bug
         this.tiles = Array(this.height).fill(null).map((_, i) => Array(this.width).fill(null).map((_, j) => new Tile(0, 0, j, i, this.unitPixel)));
         this.tiles.forEach(row => row.forEach(tile => this.app.stage.addChild(tile.container)));
         // add solid blocks on the boundary of map

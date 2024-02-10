@@ -3,6 +3,7 @@ import { Game } from "./game";
 import * as PIXI from "pixi.js";
 import { MapEditor } from "./map-editor";
 import { textChangeRangeIsUnchanged } from "typescript";
+import { GameUI } from "./game-ui";
 
 const HP_BAR_VERTICAL_BIAS = 5; // The vertical distance between the top of element and the bottom of HP bar (in pixels)
 const HP_BAR_WIDTH = 50;        // The width of HP bar (in pixels)
@@ -12,7 +13,7 @@ const HP_BAR_PADDING = 1;       // Padding (in pixels) between the HP bar and it
 // when an element is outside the player's visible range, this filter is applied to make it invisible.
 export const ELEMENT_INVISIBLE_FILTER = new PIXI.AlphaFilter(0.0);
 
-export function constructInnerContainer(type: ElementData, width: number, height: number, parent: MapEditor | Game, bgColor?: PIXI.Color): PIXI.Container {
+export function constructInnerContainer(type: ElementData, width: number, height: number, parent: MapEditor | GameUI, bgColor?: PIXI.Color): PIXI.Container {
     const container = new PIXI.Container();
     for(const part of type.parts) {
         const sprite = new PIXI.Sprite(parent.textures.get(part.img));
@@ -59,7 +60,7 @@ export type ElementModelPart = {
 export class GameElement {
     // properties
     type: ElementData;
-    gameIn: Game;
+    gameIn: GameUI;
     x: number;
     y: number;
     rad: number;
@@ -75,7 +76,7 @@ export class GameElement {
     outerContainer: PIXI.Container;   // container that has not been rotated
     innerContainer: PIXI.Container;   // container that has been rotated
 
-    constructor(type: ElementData, gameIn: Game, x: number, y: number, rad?: number, width?: number, height?: number, bgColor?: PIXI.Color) {
+    constructor(type: ElementData, gameIn: GameUI, x: number, y: number, rad?: number, width?: number, height?: number, bgColor?: PIXI.Color) {
         this.type = type;
         this.gameIn = gameIn;
         this.x = x;

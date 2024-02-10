@@ -8,11 +8,7 @@ import { PricingRule } from "./market";
 import { GamepadBinding, KeyBinding, KeyMap } from "./input";
 import { sendAllCommands } from "./utils/socket";
 import { Tile } from "./tile";
-
-export interface ReplayMode {
-    readonly kind: "Replay";
-    events: GameEvent[];
-}
+import { GameOptions, GameUI } from "./game-ui";
 
 export interface PlayerMode {
     readonly kind: "RealTime";
@@ -30,38 +26,17 @@ export interface ObserverMode {
     socket: WebSocket;
 }
 
-export type GameMode = ReplayMode | PlayerMode | ObserverMode;
-
-export type GameOptions = {
-    mode: GameMode;
-    displayHP: boolean;
-    displayVisionCirc: boolean;
-    displayDebugStr: boolean;
-    pricingRule: PricingRule;
-    defaultPlayerProp: InitEvent["plr"];
-}
+export type GameMode = PlayerMode | ObserverMode;
 
 /**
  * The game. This class is responsible for rendering the game screen, processing events, and
  * maintaining the game state.
  */
-export class Game {
-    options: GameOptions;                  // TODO: a better design
-    private app: PIXI.Application;
+export class Game extends GameUI {
+    mode: GameMode;
     gamepadID?: number;                    // ID of the first gamepad connected, if any.
-    timer: number = 0;                     // Timer. This is set to 0 when the game starts.
-    textures: Map<string, PIXI.Texture>;   // Collection of textures
-    width: number;      // width in game unit (number of blocks)
-    height: number;     // height in game unit (number of blocks)
-    unitPixel: number;  // number of pixels per game unit
-    tiles: Tile[];      // Collection of tiles. Initialized when receiving the map creation event.
-    elemData: Map<string, ElementData>;   // graphics data of each element, including its width, height, hp, etc.
-    elemList: Map<UID, GameElement>;      // Mapping from all element's UID to the element object.
     eventQueue: Queue<GameEvent>;         // Event queue. The event with the lowest timestamp will be processed first.
-    players: Map<UID, PlayerElement>;     // Mapping from each player's UID to its element.
-    
-    displayedPlayers!: PlayerElement[];
-    setDisplayedPlayers!: (players: PlayerElement[]) => void;
+
     gameEndCallback!: (event: EndEvent) => void;
     errorCallback?: (messages: string[]) => void; // If this function is called, the game will terminate immediately.
 
@@ -69,30 +44,24 @@ export class Game {
         app: PIXI.Application,
         textures: Map<string, PIXI.Texture>,
         elemData: Map<string, ElementData>,
+        pricingRule: PricingRule,
+        mode: GameMode,
         options: GameOptions,
         errorCallback?: (messages: string[]) => void,
         width?: number,
         height?: number,
     ) {
-        this.options = options;
-        this.app = app;
-        this.textures = textures;
-        this.width = width ?? 0;
-        this.height = height ?? 0;
-        this.unitPixel = Math.min(this.app.renderer.width / this.width, this.app.renderer.height / this.height);
-        this.tiles = [];
-        this.elemData = elemData;
-        this.elemList = new Map();
-        this.eventQueue = (options.mode.kind == "Replay") ? new Queue(options.mode.events) : new Queue();
-        this.players = new Map();
+        super(app, options, textures, elemData, pricingRule, width, height);
+        this.mode = mode;
+        this.eventQueue = new Queue();
         this.errorCallback = errorCallback;
     
         // initialize ticker
         this.app.ticker.autoStart = false;
         this.app.ticker.add(_ => Game.gameLoop(this));
 
-        if(options.mode.kind == "RealTime" || options.mode.kind == "Observer") {
-            const socket = options.mode.socket!;
+        if(mode.kind == "RealTime" || mode.kind == "Observer") {
+            const socket = mode.socket!;
             // intiialize socket
             socket.onmessage = msgEvent => {
                 const data = JSON.parse(msgEvent.data) as EventEntry;
@@ -107,7 +76,7 @@ export class Game {
             socket.onclose = event => {
                 this.errorCallback?.(["WebSocket was closed before game ends."]);
             }
-            if(options.mode.kind == "RealTime") {
+            if(mode.kind == "RealTime") {
                 // add listeners to gamepads
                 window.addEventListener("gamepadconnected", event => {
                     console.log(`gamepad ${event.gamepad.id} connected`);
@@ -132,7 +101,7 @@ export class Game {
      * @param uid The UID of this player.
      */
     onThisPlayerAdded(player: PlayerElement, uid: number) {
-        const mode = this.options.mode as PlayerMode;
+        const mode = this.mode as PlayerMode;
         // assign the player's UID and the player object to the game
         mode.myUID = uid;
         mode.myPlayer = player;
@@ -151,9 +120,9 @@ export class Game {
     static gameLoop(game: Game) {
         try {
             game.updateAt(game.timer);
-            if(game.options.mode.kind == "RealTime" && game.gamepadID != undefined) {
+            if(game.mode.kind == "RealTime" && game.gamepadID != undefined) {
                 const gamepad = navigator.getGamepads()[game.gamepadID]!;
-                const mode = game.options.mode;
+                const mode = game.mode;
                 if(mode.myPlayer !== undefined && gamepad !== undefined) {
                     // if any game pad is connected, use it to control the tank
                     const commands = mode.gamepadBindings.map(binding => binding(gamepad, mode.myPlayer!)).flat();
@@ -178,27 +147,6 @@ export class Game {
     }
 
     /**
-     * This function is called when the window is resized. The function will resize game display,
-     * recalculate the unitPixel, and update all elements' position.
-     * @param windowWidth new window width (in number of pixels). If left blank, use app.renderer.width.
-     * @param windowHeight new window height (in number of pixels). If left blank, use app.renderer.height.
-     */
-    windowRefresh(windowWidth?: number, windowHeight?: number) {
-        this.unitPixel = Math.min(
-            (windowWidth ?? this.app.renderer.width) / this.width,
-            (windowHeight ?? this.app.renderer.height) / this.height
-        );
-        this.app.renderer.resize(this.width * this.unitPixel, this.height * this.unitPixel);
-        this.render();
-    }
-
-    render() {
-        for(const element of this.elemList.values()) {
-            element.update();
-        }
-    }
-
-    /**
      * Update the game state to the given time. This will process all events in the event queue with
      * timestamp less than or equal to the given time.
      * @param atTime The time to update to. If not given, update to the latest time.
@@ -214,96 +162,11 @@ export class Game {
                 console.error(e);
                 console.error(`Event format damaged at timestamp ${event.t}!`);
                 if(this.errorCallback) {
-                    this.errorCallback(["An error occured. Replay aborted.", "Press F12 and check \"console\" page for more detail."]);
+                    this.errorCallback(["An error occured. Play aborted.", "Press F12 and check \"console\" page for more detail."]);
                 }
                 return false;
             }
         }
         return true;
-    }
-    
-    /**
-     * Add a new element to the board.
-     * @param uid Unique identifier of the newly added element.
-     * @param type Type of the element.
-     * @param x x coordinate of the element.
-     * @param y y coordinate of the element.
-     * @returns The newly added element.
-     */
-    addElement(uid: UID, element: GameElement): GameElement {
-        this.elemList.set(uid, element);
-        this.app.stage.addChild(element.outerContainer);
-        return element;
-    }
-
-    /**
-     * Remove an element with given UID from the board.
-     * @param uid Unique identifier of the element to be removed.
-     */
-    removeElement(uid: UID): GameElement | undefined {
-        const element = this.elemList.get(uid);
-        if(element) {
-            this.elemList.delete(uid);
-            this.app.stage.removeChild(element.outerContainer);
-        }
-        return element;
-    }
-
-    /**
-     * Get a reference to the element with given UID.
-     * @param uid Unique identifier of the element.
-     * @returns Element with given UID.
-     */
-    getElement(uid: UID) {
-        return this.elemList.get(uid);
-    }
-
-    /**
-     * Get a reference to the player whose tank has the given UID.
-     * @param uid Unique identifier of the tank controlled by the player
-     * @returns Player
-     */
-    getPlayer(uid: UID) {
-        return this.players.get(uid);
-    }
-
-    /**
-     * Get the color of a player given its name.
-     * @param uid UID of the player
-     * @returns the hexadecimal representation of the player's color
-     */
-    getPlayerColor(uid: number) {
-        return this.players.get(uid)?.color.toHex()
-    }
-
-    /**
-     * Make every element visible on the screen.
-     */
-    makeAllVisible() {
-        for(const elem of this.elemList.values()) {
-            elem.updateVisibility(true);
-        }
-    }
-
-    /**
-     * Update the visibility of all elements according to the given player's vision radius.
-     * @param player The player in the center of vision circle.
-     * @param radius Radius of the vision.
-     */
-    updateVisibility(player: PlayerElement, radius: number) {
-        this.elemList.forEach((elem, uid) => {
-            if(!(elem instanceof PlayerElement)) {
-                elem.updateVisibility(elem.getDistanceTo(player) <= radius);
-            }
-        });
-    }
-
-    /**
-     * Add a new tile to the game. The tile should always be placed at the bottom layer.
-     * @param tile the tile to be added
-     */
-    addTile(tile: Tile) {
-        this.tiles.push(tile);
-        this.app.stage.addChildAt(tile.container, 0);
     }
 }
