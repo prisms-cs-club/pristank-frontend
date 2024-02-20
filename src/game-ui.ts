@@ -29,6 +29,8 @@ export abstract class GameUI {
     players: Map<UID, PlayerElement>;     // Mapping from each player's UID to its element.
     pricingRule: PricingRule;
     timer: number = 0;  // current time in milliseconds
+    timerCallbacks: Array<(timer: number) => void> = [];
+                                          // List of functions to be called when the timer is updated.
     setPlayers!: (players: PlayerElement[]) => void;
     gameEndCallback!: (event: EndEvent) => void;
 

@@ -86,7 +86,7 @@ export class Replay extends GameUI {
     private eventList: GameEvent[];
     private nextEventIdx: number = 0;
     playSpeed: number = 1;
-    setTimer!: (time: number) => void;
+    maxTime: number;
 
     constructor(
         app: PIXI.Application,
@@ -102,11 +102,12 @@ export class Replay extends GameUI {
         this.eventList = events;
 
         sortByKey(this.eventList, e => e.t);
+        this.maxTime = this.eventList[this.eventList.length - 1].t;
         
         // set up replay timer
         this.app.ticker.autoStart = false;
         this.app.ticker.add((delta) => {
-            this.setTimer(this.timer);
+            this.timerCallbacks.forEach(callback => callback(this.timer));
             while(this.nextEventIdx < this.eventList.length && this.eventList[this.nextEventIdx].t <= this.timer) {
                 try {
                     this.eventList[this.nextEventIdx].callback(this, this.eventList[this.nextEventIdx].params);

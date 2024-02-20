@@ -68,7 +68,6 @@ export class AuctionRule implements PricingRule {
     }
 
     processEvent(game: GameUI, event: EventEntry) {
-        console.log(event);
         // The market update event of auction rule can be in 3 different forms:
         if(event.toSell != undefined) {
             // start of auction

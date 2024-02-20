@@ -8,6 +8,7 @@ export default function AuctionRulePanel({rule, game}: { rule: AuctionRule, game
     const [selling, setSelling] = useState<string | undefined>();
     const [price, setPrice] = useState<number>(0);
     const [nextTime, setNextEventTime] = useState<number | undefined>();
+    const [curTime, setCurTime] = useState<number>(game.timer);
     const [lastBidder, setLastBidder] = useState<number | undefined>();
     const [bid, setBid] = useState<number>(price);                // Only for real-time mode where user can bid
     useEffect(() => {
@@ -16,6 +17,9 @@ export default function AuctionRulePanel({rule, game}: { rule: AuctionRule, game
         rule.setLastBidder = setLastBidder;
         rule.setBid = setBid;
     }, [rule]);
+    useEffect(() => {
+        game.timerCallbacks.push(setCurTime);
+    }, [game]);
     useEffect(() => {
         // synchronize the `price` state in this component with the `minBid` property
         // in the `rule` object.
@@ -46,7 +50,7 @@ export default function AuctionRulePanel({rule, game}: { rule: AuctionRule, game
                     {lastBidder &&
                         <p>Last upgrade is bought by <strong style={{color: game.getPlayerColor(lastBidder)}}>{game.getPlayer(lastBidder)?.name ?? "_____"}</strong> with price <strong>{price}</strong>.</p>}
                     {(nextTime != undefined)? (
-                        <p>Next auction will start in {Math.round((nextTime! - game.timer) / 1000)} seconds.</p>
+                        <p>Next auction will start in {Math.round((nextTime! - curTime) / 1000)} seconds.</p>
                         // TODO Bug: it is not refreshing every second
                     ): (
                         <p>Next auction will start soon.</p>

@@ -118,6 +118,7 @@ export class Game extends GameUI {
 
     static gameLoop(game: Game) {
         try {
+            game.timerCallbacks.forEach(callback => callback(game.timer));
             game.updateAt(game.timer);
             if(game.mode.kind == "RealTime" && game.gamepadID != undefined) {
                 const gamepad = navigator.getGamepads()[game.gamepadID]!;
