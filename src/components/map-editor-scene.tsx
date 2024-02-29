@@ -70,7 +70,7 @@ export default function MapEditorScene({mapEditor}: {mapEditor: MapEditor}) {
         // append canvas
         const canvas = mapEditor.app.view as HTMLCanvasElement;
         canvas.className = styles["game-canvas"];
-        document.getElementById("root")?.appendChild(canvas);
+        document.getElementById("game-container")?.appendChild(canvas);
         // append blocks to the 'blocks' panel
         const blocksPanel = document.getElementById("blocks")!;
         for(const [name, data] of mapEditor.elements) {
@@ -196,6 +196,7 @@ export default function MapEditorScene({mapEditor}: {mapEditor: MapEditor}) {
                     <a className={mapEditorStyles["save"]} onClick={() => copyToClipbord(mapEditor)}>copy to clipboard</a>
                 </div>
             </div>
+            <div id="game-container"></div>
             <div className={styles["right-panel"]}>
                 <div className={styles["card"]}>
                     <button onClick={e => toggleHide(e)}>hide help</button>

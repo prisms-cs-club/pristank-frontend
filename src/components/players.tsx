@@ -3,7 +3,6 @@
 import { PlayerElement, PlayerState } from "@/player";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import styles from "@/app/page.module.css";
-import { GameContext } from "./game-scene";
 import PropIcon from "./icon";
 import { GameUI } from "@/game-ui";
 

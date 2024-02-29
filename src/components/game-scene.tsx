@@ -23,10 +23,11 @@ export default function GameScene({ game }: { game: Game }) {
         game.pricingRule.init(game);  // init pricing rules
         // Other initializations of the game related to graphics should be put here.
     }, [game]);
-    return <div id="root" className={styles["game-container"]}>
+    return <div id="root">
         <div className={styles["left-panel"]}>
             <PlayersPanel parent={game}></PlayersPanel>
         </div>
+        <div className={styles["game-container"]}></div>
         <ErrorContext.Provider value={error}> 
             { error && <ErrorPanel></ErrorPanel> }
         </ErrorContext.Provider>

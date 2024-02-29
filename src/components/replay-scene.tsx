@@ -25,10 +25,11 @@ export default function ReplayScene({ replay }: { replay: Replay }) {
             replay.play();
         }
     }, [replay]);
-    return <div className={styles["game-container"]}>
+    return <div id="root">
         <div className={styles["left-panel"]}>
             <PlayersPanel parent={replay}></PlayersPanel>
         </div>
+        <div className={styles["game-container"]}></div>
         { gameEnd && <GameEndPanel parent={replay} endEvent={gameEnd}></GameEndPanel> }
         <div className={styles["right-panel"]}>
             <div className={styles["card"]}>

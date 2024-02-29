@@ -1,6 +1,5 @@
 import styles from "@/app/page.module.css";
 import { useContext } from "react";
-import { GameContext } from "./game-scene";
 import { EndEvent } from "@/event";
 import { assertDef } from "@/utils/other";
 import { GameUI } from "@/game-ui";

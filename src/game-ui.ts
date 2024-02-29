@@ -70,13 +70,11 @@ export abstract class GameUI {
     /**
      * This function is called when the window is resized. The function will resize game display,
      * recalculate the unitPixel, and update all elements' position.
-     * @param windowWidth new window width (in number of pixels). If left blank, use app.renderer.width.
-     * @param windowHeight new window height (in number of pixels). If left blank, use app.renderer.height.
      */
-    windowRefresh(windowWidth?: number, windowHeight?: number) {
+    windowRefresh() {
         this.unitPixel = Math.min(
-            (windowWidth ?? this.app.renderer.width) / this.width,
-            (windowHeight ?? this.app.renderer.height) / this.height
+            this.app.renderer.width / this.width,
+            this.app.renderer.height / this.height
         );
         this.app.renderer.resize(this.width * this.unitPixel, this.height * this.unitPixel);
         this.render();

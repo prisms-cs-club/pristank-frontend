@@ -51,7 +51,6 @@ export default function AuctionRulePanel({rule, game}: { rule: AuctionRule, game
                         <p>Last upgrade is bought by <strong style={{color: game.getPlayerColor(lastBidder)}}>{game.getPlayer(lastBidder)?.name ?? "_____"}</strong> with price <strong>{price}</strong>.</p>}
                     {(nextTime != undefined)? (
                         <p>Next auction will start in {Math.round((nextTime! - curTime) / 1000)} seconds.</p>
-                        // TODO Bug: it is not refreshing every second
                     ): (
                         <p>Next auction will start soon.</p>
                     )}
