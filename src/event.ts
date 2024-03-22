@@ -181,6 +181,11 @@ export const GAME_EVENTS: { [key: string]: EventBody } = {
         // The specific behavior of this event depends on the pricing rule.
         game.pricingRule.processEvent(game, param);
     },
+    "Dbg": (game, param) => {
+        // Debug event
+        // This is triggered when a debug message is sent.
+        console.log(`[DEBUG time=${Math.round(game.timer)}ms] ${param.msg}`);
+    },
     "End": (game, param) => {
         // Game End event
         // This is triggerd when the game ends.

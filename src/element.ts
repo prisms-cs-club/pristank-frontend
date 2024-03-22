@@ -5,10 +5,10 @@ import { MapEditor } from "./map-editor";
 import { textChangeRangeIsUnchanged } from "typescript";
 import { GameUI } from "./game-ui";
 
-const HP_BAR_VERTICAL_BIAS = 5; // The vertical distance between the top of element and the bottom of HP bar (in pixels)
-const HP_BAR_WIDTH = 50;        // The width of HP bar (in pixels)
-const HP_BAR_HEIGHT = 5;        // The height of HP bar (in pixels)
-const HP_BAR_PADDING = 1;       // Padding (in pixels) between the HP bar and its background
+const HP_BAR_VERTICAL_BIAS = 0.05;   // The vertical distance between the top of element and the bottom of HP bar (in game unit)
+const HP_BAR_WIDTH = 0.8;         // The width of HP bar (in game unit)
+const HP_BAR_HEIGHT = 0.08;       // The height of HP bar (in game unit)
+const HP_BAR_PADDING = 0.01;      // Padding (in game unit) between the HP bar and its background
 
 // when an element is outside the player's visible range, this filter is applied to make it invisible.
 export const ELEMENT_INVISIBLE_FILTER = new PIXI.AlphaFilter(0.0);
@@ -96,8 +96,9 @@ export class GameElement {
      * Update the container's position and rotation.
      */
     update() {
-        this.outerContainer.x = this.x * this.gameIn.unitPixel;
-        this.outerContainer.y = (this.gameIn.height - this.y) * this.gameIn.unitPixel;
+        let unitPixel = this.gameIn.unitPixel;
+        this.outerContainer.x = this.x * unitPixel;
+        this.outerContainer.y = (this.gameIn.height - this.y) * unitPixel;
         this.innerContainer.rotation = -this.rad;   // Because in PIXI.js, `rotation` is the angle rotating clockwise
                                                     // and we want counterclockwise rotation
         if(this.gameIn.options.displayHP && this.hp && this.maxHp && this.hp != this.maxHp) {
@@ -108,24 +109,24 @@ export class GameElement {
                 this.outerContainer.addChild(this.hpBar);
             }
             // draw a gray background box for the HP bar
-            let topLeftY = -this.height * this.gameIn.unitPixel * 0.8 - HP_BAR_VERTICAL_BIAS;
+            let topLeftY = (-this.height * 0.8 - HP_BAR_VERTICAL_BIAS) * unitPixel;
             if(topLeftY + this.outerContainer.y <= 0) {
-                topLeftY = this.height * this.gameIn.unitPixel * 0.8 + HP_BAR_VERTICAL_BIAS;
+                topLeftY = (this.height * 0.8 + HP_BAR_VERTICAL_BIAS) * unitPixel;
             }
             this.hpBar.clear();
             // this.hpBar.beginFill(new PIXI.Color([0.5, 0.5, 0.5]));
-            this.hpBar.lineStyle(HP_BAR_PADDING * 2, new PIXI.Color([0.5, 0.5, 0.5]));
+            this.hpBar.lineStyle(HP_BAR_PADDING * unitPixel * 2, new PIXI.Color([0.5, 0.5, 0.5]));
             this.hpBar.drawRect(
-                -HP_BAR_WIDTH / 2 - HP_BAR_PADDING,
-                topLeftY - HP_BAR_PADDING,
-                HP_BAR_WIDTH + HP_BAR_PADDING * 2,
-                HP_BAR_HEIGHT + HP_BAR_PADDING * 2
+                (-HP_BAR_WIDTH / 2 - HP_BAR_PADDING) * unitPixel,
+                topLeftY - HP_BAR_PADDING * unitPixel,
+                (HP_BAR_WIDTH + HP_BAR_PADDING * 2) * unitPixel,
+                (HP_BAR_HEIGHT + HP_BAR_PADDING * 2) * unitPixel
             );
             // draw the HP bar
             const hpRatio = this.hp / this.maxHp;
             this.hpBar.lineStyle(0);
             this.hpBar.beginFill(new PIXI.Color([Math.sqrt(1 - hpRatio), Math.sqrt(hpRatio), 0]));
-            this.hpBar.drawRect(-HP_BAR_WIDTH / 2, topLeftY, HP_BAR_WIDTH * hpRatio, HP_BAR_HEIGHT);
+            this.hpBar.drawRect(-HP_BAR_WIDTH * unitPixel / 2, topLeftY, HP_BAR_WIDTH * unitPixel * hpRatio, HP_BAR_HEIGHT * unitPixel);
         } else if(this.hpBar !== undefined && this.hp == this.maxHp) {
             // If the HP bar is full, then don't display it
             this.outerContainer.removeChild(this.hpBar);

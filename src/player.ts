@@ -48,6 +48,8 @@ export type PlayerState = {
     debugString: string;  // A string that will be displayed on the screen. Reserved for debugging.
 };
 
+export const VISION_CIRC_WIDTH = 0.04;  // in game unit
+
 export class PlayerElement extends GameElement {
     alive: boolean = true;      // When the player is dead, this field is set to false.
     name: string;               // Name of the player.
@@ -97,7 +99,7 @@ export class PlayerElement extends GameElement {
                 this.visionCirc = new PIXI.Graphics();
                 this.outerContainer.addChild(this.visionCirc);
             }
-            this.visionCirc.lineStyle(2, this.color, 0.5);
+            this.visionCirc.lineStyle(VISION_CIRC_WIDTH * this.gameIn.unitPixel, this.color, 0.5);
             this.visionCirc.drawCircle(0, 0, this.visionRadius * this.gameIn.unitPixel);
         }
     }
